@@ -1,5 +1,13 @@
 // 수학 연산 관련 함수들
 
+// 이스터에그 관련 변수들
+let gameStats = {
+    startTime: null,
+    correctAnswers: 0,
+    totalQuestions: 0,
+    requiredCorrectAnswers: 0
+};
+
 // 구구단 문제 생성
 function generateQuestion() {
     if (gameState.selectedOps.length > 0) {
@@ -67,10 +75,17 @@ function submitAnswer() {
         return;
     }
     
+    // 통계 업데이트
+    gameStats.totalQuestions++;
+    
     if (userAnswer === gameState.correctAnswer) {
         // 정답! 더 화려한 효과
         gameState.score += 20;
         answerInput.style.borderColor = '#00FF00';
+        gameStats.correctAnswers++;
+        
+        // 이스터에그 체크
+        checkEasterEgg();
         
         if (gameState.currentEnemy) {
             gameState.currentEnemy.hp -= 1;
@@ -122,6 +137,167 @@ function submitAnswer() {
     answerInput.value = '';
     answerInput.focus();
     updateUI();
+}
+
+// 이스터에그 체크 함수
+function checkEasterEgg() {
+    // 2~9단이 모두 선택되었는지 확인
+    const allDansSelected = [2, 3, 4, 5, 6, 7, 8, 9].every(dan => gameState.selectedDans.includes(dan));
+    
+    if (!allDansSelected) return;
+    
+    // 20분(1200초) 이내인지 확인
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - gameStats.startTime) / 1000;
+    
+    if (elapsedTime > 1200) return; // 20분 초과
+    
+    // 100% 정답률인지 확인 (최소 50문제 이상)
+    if (gameStats.totalQuestions >= 50 && gameStats.correctAnswers === gameStats.totalQuestions) {
+        showEasterEggMessage();
+    }
+}
+
+// 이스터에그 메시지 표시
+function showEasterEggMessage() {
+    // 게임 일시정지
+    gameState.running = false;
+    gameState.isMoving = false;
+    
+    // 축하 카드 생성
+    const easterEggCard = document.createElement('div');
+    easterEggCard.id = 'easterEggCard';
+    easterEggCard.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #FFD700, #FFA500, #FF69B4);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Jua', sans-serif;
+        text-align: center;
+        padding: 20px;
+        animation: sparkle 2s infinite;
+    `;
+    
+    easterEggCard.innerHTML = `
+        <div style="background: rgba(255,255,255,0.95); padding: 40px; border-radius: 30px; border: 5px solid #FF1493; box-shadow: 0 0 50px rgba(255,215,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+            <h1 style="font-size: min(8vw, 48px); color: #FF1493; margin-bottom: 30px; text-shadow: 3px 3px 0 #FFD700;">🎉 축하해요! 🎉</h1>
+            <h2 style="font-size: min(6vw, 32px); color: #8B008B; margin-bottom: 30px;">미션을 통과했어요!</h2>
+            <div style="font-size: min(4vw, 24px); color: #FF69B4; margin-bottom: 30px; line-height: 1.5;">
+                🌟 2~9단 모든 문제를 20분 안에 100% 정답! 🌟<br>
+                정말 대단해요! 💕
+            </div>
+            <div style="background: linear-gradient(135deg, #E6E6FA, #FFE4E1); padding: 30px; border-radius: 20px; margin: 20px 0; border: 3px solid #FF69B4;">
+                <div style="font-size: min(4vw, 20px); color: #4B0082; font-weight: bold; margin-bottom: 15px;">💌 특별한 메시지 💌</div>
+                <div style="font-size: min(3.5vw, 18px); color: #8B008B; line-height: 1.6;">
+                    "July 18th, 2017 was the most blessed day<br>
+                    from Mom and Dad for you!" ✨<br><br>
+                    <span style="color: #FF1493;">2017년 07월 18일은 엄마와 아빠한테<br>
+                    가장 축복받은 날이야! 💖</span>
+                </div>
+            </div>
+            <button onclick="closeEasterEgg()" style="
+                background: linear-gradient(135deg, #32CD32, #90EE90);
+                border: 3px solid #FFF;
+                color: white;
+                padding: 15px 30px;
+                font-size: min(4vw, 20px);
+                font-weight: bold;
+                cursor: pointer;
+                font-family: 'Jua', sans-serif;
+                border-radius: 25px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                margin-top: 20px;
+            ">🎮 게임 계속하기</button>
+        </div>
+    `;
+    
+    // CSS 애니메이션 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes sparkle {
+            0%, 100% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.2) saturate(1.3); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(easterEggCard);
+    
+    // 축하 파티클 효과
+    createCelebrationParticles();
+}
+
+// 이스터에그 닫기
+function closeEasterEgg() {
+    const easterEggCard = document.getElementById('easterEggCard');
+    if (easterEggCard) {
+        easterEggCard.remove();
+    }
+    
+    // 게임 재개
+    gameState.running = true;
+    gameState.isMoving = true;
+    gameLoop();
+}
+
+// 축하 파티클 효과
+function createCelebrationParticles() {
+    for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+            const colors = ['#FFD700', '#FF69B4', '#00FF00', '#FF6347', '#9370DB', '#FF1493'];
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 10000;
+                animation: celebrate 3s ease-out forwards;
+            `;
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 3000);
+        }, i * 50);
+    }
+    
+    // 축하 애니메이션 CSS
+    const celebrateStyle = document.createElement('style');
+    celebrateStyle.textContent = `
+        @keyframes celebrate {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1) translateY(-100px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translateY(-200px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(celebrateStyle);
 }
 
 // 떠다니는 텍스트 효과 (새 기능)
@@ -280,6 +456,11 @@ function startSelectedGame() {
         alert('구구단이나 연산을 하나 이상 선택해주세요!');
         return;
     }
+    
+    // 게임 통계 초기화
+    gameStats.startTime = Date.now();
+    gameStats.correctAnswers = 0;
+    gameStats.totalQuestions = 0;
     
     document.getElementById('selectMenu').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
