@@ -345,7 +345,7 @@ function updateTextParticles(ctx) {
     });
 }
 
-// 문제 패널 업데이트 (개선된 버전)
+
 function updateQuestionPanel() {
     document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
     if (gameState.currentEnemy) {
@@ -359,8 +359,19 @@ function updateQuestionPanel() {
     const answerInput = document.getElementById('answerInput');
     answerInput.style.borderColor = '#FF69B4';
     answerInput.placeholder = '답은?';
+    answerInput.value = '';
+    
+    // 모바일 키보드 방지
+    answerInput.setAttribute('readonly', 'readonly');
+    answerInput.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.blur();
+    });
+    answerInput.addEventListener('focus', function(e) {
+        e.preventDefault();
+        this.blur();
+    });
 }
-
 // 구구단 선택 함수
 function toggleDan(dan) {
     console.log('toggleDan 호출됨, dan:', dan);
