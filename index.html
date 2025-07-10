@@ -424,80 +424,106 @@
             }
         }
         
-        /* 모바일 가로 모드 최적화 */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            #controls {
-                height: 12vh;
-                min-height: 50px;
-            }
-            
-            .control-btn {
-                font-size: min(3vh, 14px) !important;
-                padding: 1vh !important;
-            }
-            
-            #ui {
-                font-size: min(2.5vh, 12px) !important;
-                padding: 1vh 2vw !important;
-            }
-            
-            #questionPanel {
-                padding: 2vh 3vw !important;
-            }
-            
-            #questionText {
-                font-size: min(5vh, 20px) !important;
-            }
-        }
+        <!-- 모바일 가로 모드 최적화 -->
+		<style>
+		@media screen and (orientation: landscape) {
+		  #questionPanel {
+			  width: 60vw;
+			  max-width: 500px;
+			  padding: 15px 20px;
+		  }
 
-        /* 가로 모드 메뉴 최적화 */
-        @media screen and (orientation: landscape) {
-            #selectMenu {
-                flex-direction: row;
-                flex-wrap: wrap;
-                padding: 1vh 2vw;
-            }
+		  #questionText {
+			font-size: 20px;
+			margin-bottom: 12px;
+		  }
 
-            #menuTitle {
-                width: 100%;
-                font-size: min(5vh, 28px);
-                margin-bottom: 1vh;
-            }
+		  #enemyInfo {
+			font-size: 16px;
+			padding: 6px 15px;
+			margin: 8px 0 12px 0;
+		  }
 
-            #menuSubtitle {
-                width: 100%;
-                font-size: min(3vh, 14px);
-                margin-bottom: 2vh;
-                padding: 0.5vh 2vw;
-            }
+		  #answerInput {
+			width: 100px;
+			font-size: 16px;  /* 18px에서 16px로 축소 */
+			padding: 6px 10px;  /* 패딩도 조금 줄임 */
+			margin: 5px;
+		  }
 
-            .menu-section {
-                flex: 1;
-                margin: 0 1vw;
-            }
+		  #submitBtn {
+			font-size: 14px;  /* 16px에서 14px로 축소 */
+			padding: 8px 18px;  /* 패딩 조정 */
+			margin: 5px;
+		  }
 
-            #danGrid {
-                gap: 1vh;
-            }
+		  #customKeyboard {
+			margin-top: 10px;
+			gap: 5px;  /* 6px에서 5px로 줄임 */
+		  }
+		  
+		  .numpad-container {
+			gap: 3px;
+		  }
 
-            .dan-btn, .operator-btn {
-                padding: 1.5vh 1vw !important;
-                font-size: min(3vh, 16px) !important;
-            }
-
-            #selectedOptions {
-                width: 100%;
-                margin: 1vh 0;
-                padding: 1vh 2vw;
-                font-size: min(3vh, 14px);
-            }
-
-            #startGameBtn {
-                padding: 2vh 4vw;
-                font-size: min(4vh, 20px);
-            }
-        }
-    </style>
+		  #customKeyboard .key-btn {
+			width: 38px;  /* 35px에서 38px로 증가 */
+			height: 38px;  /* 35px에서 38px로 증가 */
+			font-size: 17px;  /* 16px에서 17px로 증가 */
+			border-width: 2px;
+			border-radius: 8px;
+		  }
+		  
+		  .control-buttons {
+			gap: 3px;
+		  }
+		  
+		  .control-buttons .key-btn {
+			width: 44px;  /* 40px에서 44px로 증가 */
+			height: 38px;  /* 높이도 맞춤 */
+		  }
+		  
+		  /* 매우 낮은 화면 높이 대응 */
+		  @media (max-height: 400px) {
+			#questionPanel {
+			  padding: 10px 15px;
+			  width: 50vw;
+			}
+			
+			#questionText {
+			  font-size: 18px;
+			  margin-bottom: 8px;
+			}
+			
+			#enemyInfo {
+			  font-size: 14px;
+			  padding: 4px 10px;
+			  margin: 5px 0 8px 0;
+			}
+			
+			#answerInput {
+			  font-size: 14px;  /* 더 작은 화면에서는 더 줄임 */
+			  padding: 4px 8px;
+			}
+			
+			#submitBtn {
+			  font-size: 12px;  /* 더 작은 화면에서는 더 줄임 */
+			  padding: 6px 15px;
+			}
+			
+			#customKeyboard .key-btn {
+			  width: 32px;  /* 30px에서 32px로 약간 증가 */
+			  height: 32px;  /* 30px에서 32px로 약간 증가 */
+			  font-size: 15px;  /* 14px에서 15px로 증가 */
+			}
+			
+			.control-buttons .key-btn {
+			  width: 37px;  /* 35px에서 37px로 약간 증가 */
+			  height: 32px;  /* 30px에서 32px로 맞춤 */
+			}
+		  }
+		}
+		</style>
 </head>
 <body>
     <div id="gameContainer">
