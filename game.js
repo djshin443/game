@@ -11,6 +11,24 @@ const JUMP_POWER = -18;
 const JUMP_FORWARD_SPEED = 6;
 let GROUND_Y = 240; // 동적으로 변경됨
 
+// 모바일 감지 함수
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           ('ontouchstart' in window) || 
+           (navigator.maxTouchPoints > 0);
+}
+
+// 디바이스별 점프 파워 계산
+function getJumpPower() {
+    if (isMobileDevice()) {
+        // 모바일에서는 점프 파워를 줄임
+        return -14;
+    } else {
+        // PC에서는 기본 점프 파워
+        return -18;
+    }
+}
+
 // 게임 상태 먼저 초기화
 let gameState = {
     running: false,
@@ -1384,8 +1402,13 @@ function updateParticles() {
 // 점프 함수 (개선된 버전)
 function jump() {
     if (jiyul.onGround && !gameState.questionActive) {
-        jiyul.velocityY = JUMP_POWER;
-        jiyul.velocityX = JUMP_FORWARD_SPEED * 1.5; // 더 멀리 점프
+        const jumpPower = getJumpPower(); // 디바이스별 점프 파워 사용
+        jiyul.velocityY = jumpPower;
+        
+        // 모바일에서는 전진 속도도 조정
+        const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
+        jiyul.velocityX = forwardSpeed;
+        
         jiyul.isJumping = true;
         jiyul.onGround = false;
         
