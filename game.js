@@ -823,14 +823,38 @@ function render() {
     
     // 장애물 그리기 (카메라 오프셋 적용)
     obstacles.forEach(obstacle => {
-        const screenX = obstacle.x - gameState.cameraX;
-        if (screenX > -100 && screenX < canvas.width + 100) {
-            const data = pixelData[obstacle.type];
-            if (data) {
-                drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y - obstacle.height);
+    const screenX = obstacle.x - gameState.cameraX;
+    if (screenX > -100 && screenX < canvas.width + 100) {
+        const data = pixelData[obstacle.type];
+        if (data) {
+            drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y - obstacle.height);
+            
+            // ✅ 여기에 새로운 코드 추가! - 데미지 장애물에 안전선 표시
+            if (obstacle.type === 'floor_spike' || obstacle.type === 'spike') {
+                // 안전선 그리기
+                ctx.strokeStyle = '#00FF00'; // 초록색 안전선
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]); // 점선 패턴
                 
-                // 바닥 가시방석 경고 효과
-                if (obstacle.type === 'floor_spike' && !gameState.questionActive) {
+                // 장애물 위 약간 위에 선 그리기
+                const safeLineY = obstacle.y - obstacle.height - 8;
+                ctx.beginPath();
+                ctx.moveTo(screenX - 5, safeLineY);
+                ctx.lineTo(screenX + obstacle.width + 5, safeLineY);
+                ctx.stroke();
+                
+                // 점선 패턴 리셋
+                ctx.setLineDash([]);
+                
+                // 안전 높이 표시 텍스트 (작게)
+                ctx.fillStyle = '#00FF00';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('SAFE', screenX + obstacle.width/2, safeLineY - 5);
+            }
+            
+            // 바닥 가시방석 경고 효과 (기존 코드 유지)
+            if (obstacle.type === 'floor_spike' && !gameState.questionActive) {
 		    // 붉은 빛 효과
 		    const pulse = 0.3 + Math.sin(gameState.distance * 0.2) * 0.2;
 		    ctx.fillStyle = 'rgba(255, 0, 0, ' + pulse + ')';
