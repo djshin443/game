@@ -786,11 +786,20 @@ function render() {
                 
                 // 바닥 가시방석 경고 효과
                 if (obstacle.type === 'floor_spike' && !gameState.questionActive) {
-                    // 붉은 빛 효과
-                    ctx.fillStyle = 'rgba(255, 0, 0, ' + (0.2 + Math.sin(gameState.distance * 0.1) * 0.1) + ')';
-                    ctx.fillRect(screenX, obstacle.y - obstacle.height, obstacle.width, obstacle.height);
-                }
-                
+		    // 붉은 빛 효과
+		    const pulse = 0.3 + Math.sin(gameState.distance * 0.2) * 0.2;
+		    ctx.fillStyle = 'rgba(255, 0, 0, ' + pulse + ')';
+		    ctx.fillRect(screenX - 5, obstacle.y - obstacle.height - 5, obstacle.width + 10, obstacle.height + 10);
+		    
+		    // 위험 표시 (느낌표)
+		    if (Math.sin(gameState.distance * 0.3) > 0) {
+		        ctx.fillStyle = '#FFFF00';
+		        ctx.font = 'bold 20px Arial';
+		        ctx.textAlign = 'center';
+		        ctx.fillText('!', screenX + obstacle.width/2, obstacle.y - obstacle.height - 10);
+		    }
+		}
+		                
                 // 장애물이 멈춘 이유라면 점프 힌트 표시
                 if (!gameState.isMoving && obstacle.type !== 'floor_spike' && Math.abs(jiyul.worldX - obstacle.x) < 100) {
                     ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
