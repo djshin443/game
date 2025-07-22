@@ -113,17 +113,126 @@ function resizeCanvas() {
 
 // 전체화면 기능
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
+    // iOS 감지
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+        // iOS에서는 풀스크린 대신 안내 메시지 표시
+        showIOSFullscreenGuide();
+        return;
+    }
+    
+    // 안드로이드 및 기타 브라우저
+    if (!document.fullscreenElement && 
+        !document.webkitFullscreenElement && 
+        !document.mozFullScreenElement && 
+        !document.msFullscreenElement) {
+        
+        const elem = document.documentElement;
+        
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        
+        // 화면 방향 잠금 시도
+        if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
-            document.getElementById('fullscreenBtn').textContent = 'EXIT';
-        }).catch(() => {});
+        }
+        
+        document.getElementById('fullscreenBtn').textContent = 'EXIT';
     } else {
-        document.exitFullscreen().then(() => {
-            document.getElementById('fullscreenBtn').textContent = 'FULL';
-        }).catch(() => {});
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        
+        document.getElementById('fullscreenBtn').textContent = 'FULL';
     }
 }
+
+// iOS 풀스크린 가이드 표시
+function showIOSFullscreenGuide() {
+    const guideDiv = document.createElement('div');
+    guideDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+        color: white;
+        padding: 30px;
+        border: 3px solid #FFF;
+        border-radius: 20px;
+        font-size: 16px;
+        z-index: 10000;
+        font-family: 'Jua', sans-serif;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        text-align: center;
+        line-height: 1.8;
+        max-width: 90vw;
+    `;
+    
+    guideDiv.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 20px;">🍎 아이폰 사용자님께 🍎</div>
+        <div style="margin-bottom: 20px;">
+            전체화면으로 플레이하시려면:<br><br>
+            1. Safari 하단의 <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px;">공유 버튼</span>을 누르세요<br>
+            2. <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px;">"홈 화면에 추가"</span>를 선택하세요<br>
+            3. 홈 화면에서 앱처럼 실행하세요!
+        </div>
+        <button onclick="this.parentElement.remove()" style="
+            background: linear-gradient(135deg, #32CD32, #90EE90);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        ">확인</button>
+    `;
+    
+    document.body.appendChild(guideDiv);
+    
+    // 5초 후 자동으로 사라짐
+    setTimeout(() => {
+        if (guideDiv.parentElement) {
+            guideDiv.remove();
+        }
+    }, 5000);
+}
+
+// iOS 체크 함수 추가
+function checkIOSFullscreen() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true;
+    
+    if (isIOS && !isStandalone) {
+        // 풀스크린 버튼 텍스트 변경
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = '🏠추가';
+        }
+    }
+}
+
+// 게임 시작 시 iOS 체크 추가
+window.addEventListener('load', checkIOSFullscreen);
 
 // 게임 초기화
 function initGame() {
@@ -135,6 +244,9 @@ function initGame() {
     gameState.questionActive = false;
     gameState.isMoving = true;
     gameState.cameraX = 0;
+
+    // 추가: 문제 패널 명시적으로 숨기기
+    document.getElementById('questionPanel').style.display = 'none';
     
     jiyul.x = 100;
     jiyul.worldX = 100;
@@ -477,30 +589,40 @@ function checkCollisions() {
     });
     
     // 적과의 충돌
-    enemies.forEach(enemy => {
-        if (!enemy.alive) return;
-        
-        const enemyScreenX = enemy.x - gameState.cameraX;
-        
-        if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
-            if (checkBoxCollision(
-                {x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
-                {x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}
-            )) {
-                // 문제 출제
-                if (!gameState.questionActive) {
-                    gameState.questionActive = true;
-                    gameState.currentEnemy = enemy;
-                    gameState.isMoving = false; // 전투 중에는 화면 정지
-                    generateQuestion();
-                    updateQuestionPanel();
-                    document.getElementById('questionPanel').style.display = 'block';
-                    document.getElementById('answerInput').value = '';
-                    document.getElementById('answerInput').focus();
-                }
-            }
-        }
-    });
+	enemies.forEach(enemy => {
+		if (!enemy.alive) return;
+		
+		const enemyScreenX = enemy.x - gameState.cameraX;
+		
+		if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
+			if (checkBoxCollision(
+				{x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
+				{x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}
+			)) {
+				// 문제 출제
+				if (!gameState.questionActive) {
+					gameState.questionActive = true;
+					gameState.currentEnemy = enemy;
+					gameState.isMoving = false; // 전투 중에는 화면 정지
+					generateQuestion();
+					updateQuestionPanel();
+					document.getElementById('questionPanel').style.display = 'block';
+					
+					// 입력창 초기화 및 모바일 키보드 완전 차단
+					const answerInput = document.getElementById('answerInput');
+					answerInput.value = '';
+					answerInput.blur(); // 포커스 제거로 모바일 키보드 방지
+					
+					// 추가 보안 조치
+					answerInput.setAttribute('readonly', 'readonly');
+					answerInput.setAttribute('inputmode', 'none');
+					
+					// 모든 포커스 제거
+					document.activeElement.blur();
+				}
+			}
+		}
+	});
 }
 
 // 박스 충돌 체크
@@ -1347,6 +1469,32 @@ function showHelp() {
           '💕 지율이 화이팅! 💕');
 }
 
+// 구구단 선택 함수
+function toggleDan(dan) {
+    console.log('toggleDan 호출됨, dan:', dan);
+    
+    const index = gameState.selectedDans.indexOf(dan);
+    const button = document.querySelector(`[data-dan="${dan}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, dan:', dan);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedDans.push(dan);
+        button.classList.add('selected');
+        console.log('구구단 추가됨:', dan);
+    } else {
+        gameState.selectedDans.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('구구단 제거됨:', dan);
+    }
+    
+    console.log('현재 선택된 구구단:', gameState.selectedDans);
+    updateSelectedDisplay();
+}
+
 // 게임 오버
 function gameOver() {
     gameState.running = false;
@@ -1454,11 +1602,33 @@ if (document.readyState === 'loading') {
 function setupEventListeners() {
     console.log('이벤트 리스너 설정 시작');
     
+    // 이미 설정되었는지 확인
+    if (window.eventListenersSetup) {
+        console.log('이벤트 리스너가 이미 설정되어 있음');
+        return;
+    }
+    window.eventListenersSetup = true;
+    
+    // 모바일 키보드 전역 방지
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.id === 'answerInput') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.activeElement.blur();
+        }
+    }, { passive: false });
+    
     // 구구단 버튼들
     const danButtons = document.querySelectorAll('.dan-btn');
     console.log('구구단 버튼 개수:', danButtons.length);
     
     danButtons.forEach(button => {
+        // 기존 이벤트 제거
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // 다시 선택하고 이벤트 추가
+    document.querySelectorAll('.dan-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1472,6 +1642,12 @@ function setupEventListeners() {
     console.log('연산 버튼 개수:', operatorButtons.length);
     
     operatorButtons.forEach(button => {
+        // 기존 이벤트 제거
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // 다시 선택하고 이벤트 추가
+    document.querySelectorAll('.operator-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1479,6 +1655,131 @@ function setupEventListeners() {
             toggleOperator(op);
         });
     });
+
+    // 기타 버튼들
+    const startBtn = document.getElementById('startGameBtn');
+    if (startBtn) {
+        const newStartBtn = startBtn.cloneNode(true);
+        startBtn.replaceWith(newStartBtn);
+        newStartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!this.disabled) {
+                startSelectedGame();
+            }
+        });
+    }
+    
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
+    
+    const jumpBtn = document.getElementById('jumpBtn');
+    if (jumpBtn) {
+        jumpBtn.addEventListener('click', jump);
+    }
+    
+    const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', showMenu);
+    }
+    
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', showHelp);
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitAnswer);
+    }
+
+    // 엔터키 이벤트
+    const answerInput = document.getElementById('answerInput');
+    if (answerInput) {
+        answerInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+    }
+
+    // 커스텀 키보드 이벤트 - 중복 방지를 위해 기존 이벤트 제거
+    const keyButtons = document.querySelectorAll('.key-btn');
+    console.log('키보드 버튼 개수:', keyButtons.length);
+
+    keyButtons.forEach(button => {
+        // 기존 이벤트 리스너 제거를 위해 버튼 복제
+        const newButton = button.cloneNode(true);
+        button.replaceWith(newButton);
+        
+        // 새 이벤트 리스너 추가
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = this.getAttribute('data-key');
+            console.log('키 버튼 클릭:', key);
+            handleKeyPress(key);
+        });
+    });
+    
+    console.log('모든 이벤트 설정 완료');
+}
+
+// ========== 이벤트 리스너 설정 ==========
+// DOM이 완전히 로드된 후 한 번만 실행
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+    setupEventListeners();
+}
+
+function setupEventListeners() {
+    console.log('이벤트 리스너 설정 시작');
+    
+    // 이미 설정되었는지 확인
+    if (window.eventListenersSetup) {
+        console.log('이벤트 리스너가 이미 설정되어 있음');
+        return;
+    }
+    window.eventListenersSetup = true;
+    
+    // 모바일 키보드 전역 방지
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.id === 'answerInput') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.activeElement.blur();
+        }
+    }, { passive: false });
+    
+    // 구구단 버튼들 - 이벤트 위임 방식 사용
+    const danGrid = document.getElementById('danGrid');
+    if (danGrid) {
+        danGrid.addEventListener('click', function(e) {
+            const button = e.target.closest('.dan-btn');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const dan = parseInt(button.getAttribute('data-dan'));
+                toggleDan(dan);
+            }
+        });
+    }
+
+    // 연산 버튼들 - 이벤트 위임 방식 사용
+    const operatorGrid = document.getElementById('operatorGrid');
+    if (operatorGrid) {
+        operatorGrid.addEventListener('click', function(e) {
+            const button = e.target.closest('.operator-btn');
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const op = button.getAttribute('data-op');
+                toggleOperator(op);
+            }
+        });
+    }
 
     // 기타 버튼들
     const startBtn = document.getElementById('startGameBtn');
@@ -1525,6 +1826,50 @@ function setupEventListeners() {
             }
         });
     }
+
+    // 커스텀 키보드 이벤트 - 이벤트 위임 방식 사용
+    const customKeyboard = document.getElementById('customKeyboard');
+    if (customKeyboard) {
+        customKeyboard.addEventListener('click', function(e) {
+            const keyBtn = e.target.closest('.key-btn');
+            if (keyBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const key = keyBtn.getAttribute('data-key');
+                console.log('키 버튼 클릭:', key);
+                handleKeyPress(key);
+            }
+        });
+    }
     
     console.log('모든 이벤트 설정 완료');
+}
+
+// 커스텀 키보드 처리 함수
+function handleKeyPress(key) {
+    const answerInput = document.getElementById('answerInput');
+    if (!answerInput) return;
+    
+    if (key === 'clear') {
+        // 전체 지우기 (하트 버튼)
+        answerInput.value = '';
+        // 귀여운 효과
+        answerInput.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            answerInput.style.transform = 'scale(1)';
+        }, 200);
+    } else if (key === 'back') {
+        // 한 글자 지우기
+        answerInput.value = answerInput.value.slice(0, -1);
+    } else {
+        // 숫자 입력 (최대 3자리로 제한)
+        if (answerInput.value.length < 3) {
+            answerInput.value += key;
+            // 입력 효과
+            answerInput.style.backgroundColor = '#FFE4E1';
+            setTimeout(() => {
+                answerInput.style.backgroundColor = '#FFF';
+            }, 100);
+        }
+    }
 }
