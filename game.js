@@ -366,6 +366,43 @@ function generateMoreEnemies() {
         });
     }
 }
+// 장애물 무한 생성 함수 추가 (generateMoreEnemies 함수 아래에 추가)
+function generateMoreObstacles() {
+    const currentMaxX = Math.max(...obstacles.map(o => o.x), jiyul.worldX);
+    const startX = Math.max(currentMaxX + 500, jiyul.worldX + 1000);
+    
+    // 새로운 장애물들 추가
+    const obstacleSpacing = 200 + Math.random() * 150;
+    for (let i = 0; i < 8; i++) {
+        const types = ['rock', 'spike', 'pipe', 'floor_spike'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        obstacles.push({
+            x: startX + i * obstacleSpacing,
+            y: GROUND_Y,
+            width: 16 * PIXEL_SCALE,
+            height: 16 * PIXEL_SCALE,
+            type: type,
+            passed: false,
+            damageDealt: false
+        });
+        
+        // 가끔 연속된 바닥 가시방석 배치
+        if (type === 'floor_spike' && Math.random() > 0.5) {
+            for (let j = 1; j <= 2; j++) {
+                obstacles.push({
+                    x: startX + i * obstacleSpacing + j * 16 * PIXEL_SCALE,
+                    y: GROUND_Y,
+                    width: 16 * PIXEL_SCALE,
+                    height: 16 * PIXEL_SCALE,
+                    type: 'floor_spike',
+                    passed: false,
+                    damageDealt: false
+                });
+            }
+        }
+    }
+}
 
 // 메인 게임 루프
 function gameLoop() {
@@ -379,14 +416,14 @@ function gameLoop() {
 // 게임 업데이트
 function update() {
     // 화면이 움직일 때만 거리와 배경 업데이트
-	if (gameState.isMoving && !gameState.questionActive) {
-		gameState.distance += gameState.speed;
-		gameState.backgroundOffset += gameState.speed * 0.5; // 양수로 증가
-		gameState.cameraX += gameState.speed;
-		
-		// 지율이도 자동으로 앞으로 이동
-		jiyul.worldX += gameState.speed;
-	}
+    if (gameState.isMoving && !gameState.questionActive) {
+        gameState.distance += gameState.speed;
+        gameState.backgroundOffset += gameState.speed * 0.5;
+        gameState.cameraX += gameState.speed;
+        
+        // 지율이도 자동으로 앞으로 이동
+        jiyul.worldX += gameState.speed;
+    }
 
     // 화면 흔들림 효과 업데이트
     if (gameState.shakeTimer > 0) {
@@ -410,6 +447,11 @@ function update() {
     enemies = enemies.filter(enemy => 
         enemy.alive && (enemy.x > gameState.cameraX - 500)
     );
+    
+    // 지나간 장애물들 정리 (너무 뒤로 간 장애물 제거)
+    obstacles = obstacles.filter(obstacle => 
+        obstacle.x > gameState.cameraX - 1000
+    );
 
     // 새로운 몬스터 생성 (앞쪽에 몬스터가 부족하면)
     const aheadEnemies = enemies.filter(enemy => 
@@ -419,12 +461,15 @@ function update() {
     if (aheadEnemies.length < 3) {
         generateMoreEnemies();
     }
-
-    // 스테이지 클리어 조건 제거 (무한 게임)
-    // const allEnemiesDefeated = enemies.every(enemy => !enemy.alive);
-    // if (allEnemiesDefeated && gameState.distance > 2000) {
-    //     nextStage();
-    // }
+    
+    // 새로운 장애물 생성 (앞쪽에 장애물이 부족하면)
+    const aheadObstacles = obstacles.filter(obstacle => 
+        obstacle.x > jiyul.worldX && obstacle.x < jiyul.worldX + 2000
+    );
+    
+    if (aheadObstacles.length < 5) {
+        generateMoreObstacles();
+    }
     
     // 거리 기반 스테이지 업그레이드
     if (gameState.distance > gameState.stage * 3000) {
@@ -1623,8 +1668,11 @@ function nextStage() {
     gameState.speed += 0.5;
     alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
     
-    // 새로운 몬스터들 추가 (기존 몬스터는 유지)
+    // 새로운 몬스터들 추가
     generateMoreEnemies();
+    
+    // 새로운 장애물들도 추가
+    generateMoreObstacles();
 }
 
 // 파티클 생성 (개선된 버전)
