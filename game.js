@@ -555,27 +555,38 @@ function updateJiyulPhysics() {
     // ✅ 플랫폼 충돌 체크 추가
     let onPlatform = false;
     platforms.forEach(platform => {
-        // 플랫폼 위에 있는지 체크
-        if (jiyul.worldX + jiyul.width > platform.x && 
-            jiyul.worldX < platform.x + platform.width &&
-            jiyul.y + jiyul.height >= platform.y &&
-            jiyul.y + jiyul.height <= platform.y + 10 &&
-            jiyul.velocityY >= 0) {
+        // 플랫폼 위에 있는지 체크 (착지 판정 개선)
+        const playerBottom = jiyul.y + jiyul.height;
+        const playerLeft = jiyul.worldX;
+        const playerRight = jiyul.worldX + jiyul.width;
+        const platformTop = platform.y;
+        const platformBottom = platform.y + platform.height;
+        
+        // X축 충돌 체크 (여유 있게)
+        if (playerRight > platform.x - 5 && 
+            playerLeft < platform.x + platform.width + 5) {
             
-            jiyul.y = platform.y - jiyul.height;
-            jiyul.velocityY = 0;
-            jiyul.onGround = true;
-            jiyul.isJumping = false;
-            jiyul.doubleJumped = false;
-            onPlatform = true;
-            
-            // 플랫폼 통과 보너스
-            if (!platform.passed) {
-                platform.passed = true;
-                gameState.score += 5;
-                createParticles(jiyul.x, jiyul.y, 'hint');
-                showFloatingText(jiyul.x, jiyul.y - 20, '+5', '#00FF00');
-                updateUI();
+            // Y축 충돌 체크 (플랫폼 위에서 아래로 떨어질 때)
+            if (playerBottom >= platformTop && 
+                playerBottom <= platformBottom + 15 && // 판정 여유를 늘림
+                jiyul.velocityY >= 0) { // 떨어지는 중일 때만
+                
+                // 플랫폼 위에 정확히 배치
+                jiyul.y = platformTop - jiyul.height;
+                jiyul.velocityY = 0;
+                jiyul.onGround = true;
+                jiyul.isJumping = false;
+                jiyul.doubleJumped = false;
+                onPlatform = true;
+                
+                // 플랫폼 통과 보너스
+                if (!platform.passed) {
+                    platform.passed = true;
+                    gameState.score += 5;
+                    createParticles(jiyul.x, jiyul.y, 'hint');
+                    showFloatingText(jiyul.x, jiyul.y - 20, '+5 안전!', '#00FF00');
+                    updateUI();
+                }
             }
         }
     });
