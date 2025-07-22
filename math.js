@@ -135,7 +135,8 @@ function submitAnswer() {
     }
     
     answerInput.value = '';
-    answerInput.focus();
+    // 모바일 키보드 방지를 위해 focus 제거
+    answerInput.blur();
     updateUI();
 }
 
@@ -345,8 +346,11 @@ function updateTextParticles(ctx) {
     });
 }
 
-// 문제 패널 업데이트 (개선된 버전)
+
 function updateQuestionPanel() {
+    // 추가: 질문이 활성화된 상태일 때만 계속 진행
+    if (!gameState.questionActive) return;
+    
     document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
     if (gameState.currentEnemy) {
         const enemyName = gameState.currentEnemy.type === 'boss' ? '👑 보스' : 
@@ -359,8 +363,30 @@ function updateQuestionPanel() {
     const answerInput = document.getElementById('answerInput');
     answerInput.style.borderColor = '#FF69B4';
     answerInput.placeholder = '답은?';
+    answerInput.value = '';
+    
+    // 모바일 키보드 완전 차단
+    answerInput.setAttribute('readonly', 'readonly');
+    answerInput.setAttribute('inputmode', 'none');
+    answerInput.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('focus', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
 }
-
 // 구구단 선택 함수
 function toggleDan(dan) {
     console.log('toggleDan 호출됨, dan:', dan);
@@ -485,3 +511,4 @@ function startSelectedGame() {
     
     initGame();
 }
+
