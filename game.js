@@ -530,8 +530,36 @@ function updateJiyulPhysics() {
         }
     }
     
-    // 바닥 충돌 체크
-    if (jiyul.y >= GROUND_Y) {
+    // ✅ 플랫폼 충돌 체크 추가
+    let onPlatform = false;
+    platforms.forEach(platform => {
+        // 플랫폼 위에 있는지 체크
+        if (jiyul.worldX + jiyul.width > platform.x && 
+            jiyul.worldX < platform.x + platform.width &&
+            jiyul.y + jiyul.height >= platform.y &&
+            jiyul.y + jiyul.height <= platform.y + 10 &&
+            jiyul.velocityY >= 0) {
+            
+            jiyul.y = platform.y - jiyul.height;
+            jiyul.velocityY = 0;
+            jiyul.onGround = true;
+            jiyul.isJumping = false;
+            jiyul.doubleJumped = false;
+            onPlatform = true;
+            
+            // 플랫폼 통과 보너스
+            if (!platform.passed) {
+                platform.passed = true;
+                gameState.score += 5;
+                createParticles(jiyul.x, jiyul.y, 'hint');
+                showFloatingText(jiyul.x, jiyul.y - 20, '+5', '#00FF00');
+                updateUI();
+            }
+        }
+    });
+    
+    // 바닥 충돌 체크 (플랫폼 위가 아닐 때만)
+    if (!onPlatform && jiyul.y >= GROUND_Y) {
         jiyul.y = GROUND_Y;
         
         // 착지 시 속도에 따른 데미지 (높은 곳에서 떨어질 때)
