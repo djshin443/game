@@ -72,6 +72,7 @@ let jiyul = {
 let obstacles = [];
 let enemies = [];
 let particles = [];
+let platforms = [];
 
 // 캔버스 크기 조정 (모바일 가로 최적화)
 function resizeCanvas() {
@@ -272,34 +273,57 @@ function generateLevel() {
     // 장애물 배치 (더 많이, 더 전략적으로)
     const obstacleSpacing = 200 + Math.random() * 150;
     for (let i = 0; i < 12; i++) {
-        const types = ['rock', 'spike', 'pipe', 'floor_spike'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        
-        obstacles.push({
-            x: 600 + i * obstacleSpacing,
-            y: GROUND_Y,
+    const types = ['rock', 'spike', 'pipe', 'floor_spike'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    const obstacleX = 600 + i * obstacleSpacing;
+    
+    obstacles.push({
+        x: obstacleX,
+        y: GROUND_Y,
+        width: 16 * PIXEL_SCALE,
+        height: 16 * PIXEL_SCALE,
+        type: type,
+        passed: false,
+        damageDealt: false
+    });
+    
+    // ✅ 가시방석이나 spike 위에 플랫폼 추가
+    if (type === 'floor_spike' || type === 'spike') {
+        platforms.push({
+            x: obstacleX,
+            y: GROUND_Y - (16 * PIXEL_SCALE) - 10, // 장애물 위 10픽셀
             width: 16 * PIXEL_SCALE,
-            height: 16 * PIXEL_SCALE,
-            type: type,
-            passed: false,
-            damageDealt: false // 바닥 가시방석용 플래그
+            height: 6 * PIXEL_SCALE, // 플랫폼 높이
+            passed: false
         });
-        
-        // 가끔 연속된 바닥 가시방석 배치
-        if (type === 'floor_spike' && Math.random() > 0.5) {
-            for (let j = 1; j <= 2; j++) {
-                obstacles.push({
-                    x: 600 + i * obstacleSpacing + j * 16 * PIXEL_SCALE,
-                    y: GROUND_Y,
-                    width: 16 * PIXEL_SCALE,
-                    height: 16 * PIXEL_SCALE,
-                    type: 'floor_spike',
-                    passed: false,
-                    damageDealt: false
-                });
-            }
+    }
+    
+    // 가끔 연속된 바닥 가시방석 배치
+    if (type === 'floor_spike' && Math.random() > 0.5) {
+        for (let j = 1; j <= 2; j++) {
+            const extraSpikeX = obstacleX + j * 16 * PIXEL_SCALE;
+            obstacles.push({
+                x: extraSpikeX,
+                y: GROUND_Y,
+                width: 16 * PIXEL_SCALE,
+                height: 16 * PIXEL_SCALE,
+                type: 'floor_spike',
+                passed: false,
+                damageDealt: false
+            });
+            
+            // ✅ 추가 가시방석에도 플랫폼 추가
+            platforms.push({
+                x: extraSpikeX,
+                y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
+                width: 16 * PIXEL_SCALE,
+                height: 6 * PIXEL_SCALE,
+                passed: false
+            });
         }
     }
+}
 
     // 몬스터 배치 (무한 생성)
     generateMoreEnemies();
@@ -452,7 +476,11 @@ function update() {
     obstacles = obstacles.filter(obstacle => 
         obstacle.x > gameState.cameraX - 1000
     );
-
+    // 지나간 플랫폼들 정리
+    platforms = platforms.filter(platform => 
+        platform.x > gameState.cameraX - 1000
+    );
+	
     // 새로운 몬스터 생성 (앞쪽에 몬스터가 부족하면)
     const aheadEnemies = enemies.filter(enemy => 
         enemy.x > jiyul.worldX && enemy.x < jiyul.worldX + 2000
@@ -877,7 +905,27 @@ function render() {
             }
         }
     });
+	
+    // 플랫폼 그리기 (장애물 위에)
+    platforms.forEach(platform => {
+        const screenX = platform.x - gameState.cameraX;
+        if (screenX > -100 && screenX < canvas.width + 100) {
+            // 플랫폼 그리기
+            const data = pixelData.safe_platform;
+            if (data) {
+                drawPixelSprite(data.sprite, data.colorMap, screenX, platform.y);
+            }
+        
+            // 플랫폼 빛나는 효과
+            const glow = 0.3 + Math.sin(gameState.distance * 0.1) * 0.2;
+            ctx.fillStyle = `rgba(255, 215, 0, ${glow})`;
+            ctx.fillRect(screenX - 2, platform.y - 2, platform.width + 4, platform.height + 4);
+        }
+    });
+
+
     
+	
     // 적 그리기 (카메라 오프셋 적용)
     enemies.forEach(enemy => {
         if (!enemy.alive) return;
