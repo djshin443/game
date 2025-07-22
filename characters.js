@@ -249,6 +249,7 @@ const pixelData = {
             3: "#90EE90",
             7: "#228B22"
         }
+    floor_spike: {  // ✅ floor_spike를 별도 객체로 분리
         sprite: [
             [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],
             [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],
@@ -275,8 +276,7 @@ const pixelData = {
             7: "#228B22"     // 초록 잔디
         }
     }
-    }
-};
+}; 
 
 // 픽셀 스프라이트 그리기 함수
 function drawPixelSprite(sprite, colorMap, x, y, scale = PIXEL_SCALE) {
