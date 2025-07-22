@@ -292,9 +292,9 @@ function generateLevel() {
     if (type === 'floor_spike' || type === 'spike') {
         platforms.push({
             x: obstacleX,
-            y: GROUND_Y - (16 * PIXEL_SCALE) - 10, // 장애물 위 10픽셀
+            y: GROUND_Y - (16 * PIXEL_SCALE) - 30,
             width: 16 * PIXEL_SCALE,
-            height: 6 * PIXEL_SCALE, // 플랫폼 높이
+	    height: 8 * PIXEL_SCALE, // 플랫폼 높이
             passed: false
         });
     }
@@ -926,7 +926,7 @@ function render() {
                 ctx.setLineDash([5, 5]); // 점선 패턴
                 
                 // 장애물 위 약간 위에 선 그리기
-                const safeLineY = obstacle.y - obstacle.height - 8;
+                const safeLineY = obstacle.y - obstacle.height - 30;
                 ctx.beginPath();
                 ctx.moveTo(screenX - 5, safeLineY);
                 ctx.lineTo(screenX + obstacle.width + 5, safeLineY);
