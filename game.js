@@ -395,14 +395,15 @@ function generateMoreObstacles() {
     const currentMaxX = Math.max(...obstacles.map(o => o.x), jiyul.worldX);
     const startX = Math.max(currentMaxX + 500, jiyul.worldX + 1000);
     
-    // 새로운 장애물들 추가
     const obstacleSpacing = 200 + Math.random() * 150;
     for (let i = 0; i < 8; i++) {
         const types = ['rock', 'spike', 'pipe', 'floor_spike'];
         const type = types[Math.floor(Math.random() * types.length)];
         
+        const obstacleX = startX + i * obstacleSpacing;
+        
         obstacles.push({
-            x: startX + i * obstacleSpacing,
+            x: obstacleX,
             y: GROUND_Y,
             width: 16 * PIXEL_SCALE,
             height: 16 * PIXEL_SCALE,
@@ -411,17 +412,38 @@ function generateMoreObstacles() {
             damageDealt: false
         });
         
+        // ✅ 가시방석이나 spike 위에 플랫폼 추가
+        if (type === 'floor_spike' || type === 'spike') {
+            platforms.push({
+                x: obstacleX,
+                y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
+                width: 16 * PIXEL_SCALE,
+                height: 6 * PIXEL_SCALE,
+                passed: false
+            });
+        }
+        
         // 가끔 연속된 바닥 가시방석 배치
         if (type === 'floor_spike' && Math.random() > 0.5) {
             for (let j = 1; j <= 2; j++) {
+                const extraSpikeX = obstacleX + j * 16 * PIXEL_SCALE;
                 obstacles.push({
-                    x: startX + i * obstacleSpacing + j * 16 * PIXEL_SCALE,
+                    x: extraSpikeX,
                     y: GROUND_Y,
                     width: 16 * PIXEL_SCALE,
                     height: 16 * PIXEL_SCALE,
                     type: 'floor_spike',
                     passed: false,
                     damageDealt: false
+                });
+                
+                // ✅ 추가 가시방석에도 플랫폼 추가
+                platforms.push({
+                    x: extraSpikeX,
+                    y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
+                    width: 16 * PIXEL_SCALE,
+                    height: 6 * PIXEL_SCALE,
+                    passed: false
                 });
             }
         }
