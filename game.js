@@ -1713,32 +1713,28 @@ function updateParticles() {
 // 점프 함수 (개선된 버전)
 function jump() {
     if (jiyul.onGround && !gameState.questionActive) {
-        const jumpPower = getJumpPower(); // 디바이스별 점프 파워 사용
+        const jumpPower = getJumpPower();
         jiyul.velocityY = jumpPower;
         
-        // 모바일에서는 전진 속도도 조정
         const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
         jiyul.velocityX = forwardSpeed;
         
         jiyul.isJumping = true;
         jiyul.onGround = false;
         
-        // 점프 시 화면 이동 강제 재개
         gameState.isMoving = true;
         
-        // 점프 효과음 대신 파티클
         createParticles(jiyul.x, jiyul.y, 'hint');
         
-        // 점프 성공 시 작은 보너스
         gameState.score += 1;
         updateUI();
         
-        // 점프 애니메이션 시작
         jiyul.animFrame = 0;
         jiyul.animTimer = 0;
-    } else if (jiyul.isJumping && jiyul.velocityY < 0 && jiyul.velocityY > jumpPower / 2) {
-        // 이중 점프 (한 번만 가능)
-        if (!jiyul.doubleJumped && gameState.stage >= 3) { // 스테이지 3부터 가능
+    } else if (jiyul.isJumping && jiyul.velocityY < 0 && jiyul.velocityY > getJumpPower() / 2) {
+        // 이중 점프 (한 번만 가능) - 스테이지 제한 제거!
+        if (!jiyul.doubleJumped) { // && gameState.stage >= 3 삭제
+            const jumpPower = getJumpPower();
             jiyul.velocityY = jumpPower * 0.7;
             jiyul.velocityX = JUMP_FORWARD_SPEED * 0.5;
             jiyul.doubleJumped = true;
