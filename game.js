@@ -36,6 +36,7 @@ let gameState = {
     stage: 1,
     selectedDans: [],
     selectedOps: [],
+    selectedCharacter: 'jiyul', // 이 줄 추가
     distance: 0,
     speed: 4,
     questionActive: false,
@@ -43,23 +44,23 @@ let gameState = {
     backgroundOffset: 0,
     currentQuestion: '',
     correctAnswer: 0,
-    isMoving: true, // 화면이 움직이는지 여부
-    cameraX: 0, // 카메라 위치
-    screenShake: 0, // 화면 흔들림 효과
-    shakeTimer: 0  // 흔들림 타이머
+    isMoving: true,
+    cameraX: 0,
+    screenShake: 0,
+    shakeTimer: 0
 };
 
 // 지율이 캐릭터 초기화
-let jiyul = {
+let player = {
     x: 100,
     y: 240,
-    worldX: 100, // 월드 좌표
+    worldX: 100,
     width: 16 * PIXEL_SCALE,
     height: 16 * PIXEL_SCALE,
     hp: 100,
     animFrame: 0,
     animTimer: 0,
-    sprite: 'jiyul',
+    sprite: 'jiyul', // 선택된 캐릭터 스프라이트
     velocityY: 0,
     velocityX: 0,
     isJumping: false,
@@ -98,8 +99,8 @@ function resizeCanvas() {
     
     // 캐릭터 크기 재조정
     if (jiyul) {
-        jiyul.width = 16 * PIXEL_SCALE;
-        jiyul.height = 16 * PIXEL_SCALE;
+        player.width = 16 * PIXEL_SCALE;
+        player.height = 16 * PIXEL_SCALE;
     }
     
     // 바닥 위치 재조정
@@ -107,7 +108,7 @@ function resizeCanvas() {
     
     // 지율이 위치 조정 (gameState가 존재할 때만)
     if (jiyul && gameState && !gameState.questionActive) {
-        jiyul.y = GROUND_Y;
+        player.y = GROUND_Y;
     }
 }
 
@@ -245,17 +246,18 @@ function initGame() {
     gameState.isMoving = true;
     gameState.cameraX = 0;
 
-    // 추가: 문제 패널 명시적으로 숨기기
     document.getElementById('questionPanel').style.display = 'none';
     
-    jiyul.x = 100;
-    jiyul.worldX = 100;
-    jiyul.y = GROUND_Y;
-    jiyul.hp = 100;
-    jiyul.velocityY = 0;
-    jiyul.velocityX = 0;
-    jiyul.onGround = true;
-    jiyul.isJumping = false;
+    // 선택된 캐릭터로 플레이어 초기화
+    player.sprite = gameState.selectedCharacter;
+    player.x = 100;
+    player.worldX = 100;
+    player.y = GROUND_Y;
+    player.hp = 100;
+    player.velocityY = 0;
+    player.velocityX = 0;
+    player.onGround = true;
+    player.isJumping = false;
     
     generateLevel();
     gameLoop();
@@ -289,8 +291,8 @@ function generateLevel() {
 
 // 몬스터 무한 생성 함수 추가
 function generateMoreEnemies() {
-    const currentMaxX = Math.max(...enemies.map(e => e.x), jiyul.worldX);
-    const startX = Math.max(currentMaxX + 300, jiyul.worldX + 800);
+    const currentMaxX = Math.max(...enemies.map(e => e.x), player.worldX);
+    const startX = Math.max(currentMaxX + 300, player.worldX + 800);
     
     // 새로운 몬스터들 추가
     for (let i = 0; i < 5; i++) {
@@ -367,7 +369,7 @@ function update() {
 		gameState.cameraX += gameState.speed;
 		
 		// 지율이도 자동으로 앞으로 이동
-		jiyul.worldX += gameState.speed;
+		player.worldX += gameState.speed;
 	}
 
     // 화면 흔들림 효과 업데이트
@@ -395,7 +397,7 @@ function update() {
 
     // 새로운 몬스터 생성 (앞쪽에 몬스터가 부족하면)
     const aheadEnemies = enemies.filter(enemy => 
-        enemy.x > jiyul.worldX && enemy.x < jiyul.worldX + 2000
+        enemy.x > player.worldX && enemy.x < player.worldX + 2000
     );
     
     if (aheadEnemies.length < 3) {
@@ -417,43 +419,43 @@ function update() {
 // 지율이 물리 업데이트
 function updateJiyulPhysics() {
     // 중력 적용
-    if (!jiyul.onGround) {
-        jiyul.velocityY += GRAVITY;
+    if (!player.onGround) {
+        player.velocityY += GRAVITY;
     }
     
     // Y축 이동
-    jiyul.y += jiyul.velocityY;
+    player.y += player.velocityY;
     
     // X축 이동 (점프나 조작 시)
-    if (jiyul.velocityX !== 0) {
-        jiyul.worldX += jiyul.velocityX;
+    if (player.velocityX !== 0) {
+        player.worldX += player.velocityX;
         // 마찰력 적용 (점프 중에는 덜 적용)
-        const friction = jiyul.isJumping ? 0.98 : 0.92;
-        jiyul.velocityX *= friction;
-        if (Math.abs(jiyul.velocityX) < 0.1) {
-            jiyul.velocityX = 0;
+        const friction = player.isJumping ? 0.98 : 0.92;
+        player.velocityX *= friction;
+        if (Math.abs(player.velocityX) < 0.1) {
+            player.velocityX = 0;
         }
     }
     
     // 바닥 충돌 체크
-    if (jiyul.y >= GROUND_Y) {
-        jiyul.y = GROUND_Y;
-        jiyul.velocityY = 0;
-        jiyul.onGround = true;
-        jiyul.isJumping = false;
+    if (player.y >= GROUND_Y) {
+        player.y = GROUND_Y;
+        player.velocityY = 0;
+        player.onGround = true;
+        player.isJumping = false;
         
         // 착지 시 파티클 효과
-        if (jiyul.velocityX > 2) {
-            createParticles(jiyul.x, jiyul.y, 'hint');
+        if (player.velocityX > 2) {
+            createParticles(player.x, player.y, 'hint');
         }
     }
     
     // 화면의 1/4 지점에 고정된 위치 설정 (더 뒤로 이동)
     const targetScreenX = canvas.width / 4;
-    jiyul.x = targetScreenX;
+    player.x = targetScreenX;
     
     // 카메라를 지율이의 월드 위치에 맞춰 조정 (지율이는 계속 오른쪽으로 진행)
-    gameState.cameraX = jiyul.worldX - targetScreenX;
+    gameState.cameraX = player.worldX - targetScreenX;
 }
 
 // 몬스터 물리 처리 (대폭 개선)
@@ -468,12 +470,12 @@ function updateEnemyPhysics() {
             
             // 보스의 경우 플레이어 추적
             if (enemy.type === 'boss') {
-                const distanceToPlayer = Math.abs(enemy.x - jiyul.worldX);
+                const distanceToPlayer = Math.abs(enemy.x - player.worldX);
                 
                 if (distanceToPlayer < enemy.aggroRange) {
                     enemy.isAggro = true;
                     // 플레이어 방향으로 이동
-                    if (enemy.x > jiyul.worldX) {
+                    if (enemy.x > player.worldX) {
                         enemy.direction = -1;
                     } else {
                         enemy.direction = 1;
@@ -539,30 +541,23 @@ function checkCollisions() {
             
             // 지율이 월드 좌표로 충돌 체크
             if (checkBoxCollision(
-                {x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
+                {x: player.worldX, y: player.y, width: player.width, height: player.height},
                 {x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height}
             )) {
                 // spike는 데미지를 입힘
                 if (obstacle.type === 'spike' && !obstacle.passed) {
-                    jiyul.hp -= 20;
-                    obstacle.passed = true;
-                    createParticles(jiyul.x, jiyul.y, 'hurt');
-                    
-                    // 화면 흔들림 효과
-                    gameState.shakeTimer = 20;
-                    
-                    updateUI();
-                    
-                    if (jiyul.hp <= 0) {
-                        gameOver();
-                        return;
-                    }
-                }
+		    obstacle.passed = true;
+		    createParticles(player.x, player.y, 'hint'); // hurt → hint로 변경
+		    
+		    // 통과 보너스 점수 (데미지 제거)
+		    gameState.score += 5;
+		    updateUI();
+		}
                 // 다른 장애물은 점프 중이 아닐 때만 막힘
-                else if (obstacle.type !== 'spike' && jiyul.onGround) {
+                else if (obstacle.type !== 'spike' && player.onGround) {
                     // 장애물 앞에서 멈춤 (바닥에 있을 때만)
-                    jiyul.worldX = obstacle.x - jiyul.width - 5;
-                    jiyul.velocityX = 0;
+                    player.worldX = obstacle.x - player.width - 5;
+                    player.velocityX = 0;
                     
                     // 화면 이동 정지
                     gameState.isMoving = false;
@@ -572,16 +567,16 @@ function checkCollisions() {
                     
                     // 점프로만 넘어갈 수 있도록 힌트
                     if (Math.random() < 0.01) { // 가끔 힌트 표시
-                        createParticles(jiyul.x, jiyul.y - 30, 'hint');
+                        createParticles(player.x, player.y - 30, 'hint');
                     }
                 }
             } else {
                 // 장애물을 넘어갔으면 다시 이동 시작
-                if (jiyul.worldX > obstacle.x + obstacle.width && !obstacle.passed) {
+                if (player.worldX > obstacle.x + obstacle.width && !obstacle.passed) {
                     obstacle.passed = true;
                     gameState.isMoving = true;
                     gameState.score += 10; // 장애물 통과 보너스
-                    createParticles(jiyul.x, jiyul.y - 20, 'hint'); // 성공 파티클
+                    createParticles(player.x, player.y - 20, 'hint'); // 성공 파티클
                     updateUI();
                 }
             }
@@ -596,7 +591,7 @@ function checkCollisions() {
 		
 		if (enemyScreenX > -100 && enemyScreenX < canvas.width + 100) {
 			if (checkBoxCollision(
-				{x: jiyul.worldX, y: jiyul.y, width: jiyul.width, height: jiyul.height},
+				{x: player.worldX, y: player.y, width: player.width, height: player.height},
 				{x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}
 			)) {
 				// 문제 출제
@@ -636,10 +631,10 @@ function checkBoxCollision(box1, box2) {
 // 애니메이션 업데이트
 function updateAnimations() {
     // 지율이 애니메이션 (걷기 애니메이션 추가)
-    jiyul.animTimer++;
-    if (jiyul.animTimer >= 15) { // 걷기 애니메이션 속도 조절
-        jiyul.animFrame = (jiyul.animFrame + 1) % 3; // 0, 1, 2로 순환
-        jiyul.animTimer = 0;
+    player.animTimer++;
+    if (player.animTimer >= 15) { // 걷기 애니메이션 속도 조절
+        player.animFrame = (player.animFrame + 1) % 3; // 0, 1, 2로 순환
+        player.animTimer = 0;
     }
     
     // 적 애니메이션
@@ -654,7 +649,7 @@ function updateAnimations() {
 function updateUI() {
     document.getElementById('score').textContent = gameState.score;
     document.getElementById('stageText').textContent = gameState.stage;
-    document.getElementById('hp').textContent = Math.max(0, jiyul.hp);
+    document.getElementById('hp').textContent = Math.max(0, player.hp);
 }
 
 // 렌더링 (카메라 시스템 적용)
@@ -687,7 +682,7 @@ function render() {
             drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y - obstacle.height);
             
             // 장애물이 멈춘 이유라면 점프 힌트 표시
-            if (!gameState.isMoving && Math.abs(jiyul.worldX - obstacle.x) < 100) {
+            if (!gameState.isMoving && Math.abs(player.worldX - obstacle.x) < 100) {
                 ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
                 ctx.fillRect(screenX, obstacle.y - obstacle.height - 10, obstacle.width, 5);
             }
@@ -715,14 +710,14 @@ function render() {
     let sprite;
     
     // 애니메이션 상태에 따른 스프라이트 선택
-    if (jiyul.isJumping) {
+    if (player.isJumping) {
         sprite = jiyulData.jump;
     } else if (gameState.isMoving && !gameState.questionActive) {
         // 걷기 애니메이션 (0: idle, 1: walking1, 2: walking2)
         if (jiyulData.walking1 && jiyulData.walking2) {
-            if (jiyul.animFrame === 1) {
+            if (player.animFrame === 1) {
                 sprite = jiyulData.walking1;
-            } else if (jiyul.animFrame === 2) {
+            } else if (player.animFrame === 2) {
                 sprite = jiyulData.walking2;
             } else {
                 sprite = jiyulData.idle;
@@ -735,7 +730,7 @@ function render() {
     }
     
     // 일반적인 방법으로 그리기 (뒤집기 없이)
-    drawPixelSprite(sprite, jiyulData.colorMap, jiyul.x, jiyul.y - jiyul.height);
+    drawPixelSprite(sprite, jiyulData.colorMap, player.x, player.y - player.height);
     
     // 파티클 그리기
     particles.forEach(particle => {
@@ -1549,22 +1544,22 @@ function updateParticles() {
 
 // 점프 함수 (개선된 버전)
 function jump() {
-    if (jiyul.onGround && !gameState.questionActive) {
+    if (player.onGround && !gameState.questionActive) {
         const jumpPower = getJumpPower(); // 디바이스별 점프 파워 사용
-        jiyul.velocityY = jumpPower;
+        player.velocityY = jumpPower;
         
         // 모바일에서는 전진 속도도 조정
         const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
-        jiyul.velocityX = forwardSpeed;
+        player.velocityX = forwardSpeed;
         
-        jiyul.isJumping = true;
-        jiyul.onGround = false;
+        player.isJumping = true;
+        player.onGround = false;
         
         // 점프 시 화면 이동 강제 재개
         gameState.isMoving = true;
         
         // 점프 효과음 대신 파티클
-        createParticles(jiyul.x, jiyul.y, 'hint');
+        createParticles(player.x, player.y, 'hint');
         
         // 점수 보너스 (점프 성공)
         gameState.score += 1;
@@ -1841,8 +1836,24 @@ function setupEventListeners() {
             }
         });
     }
-    
+    // 캐릭터 선택 버튼들 - 이벤트 위임 방식 사용
+	const characterGrid = document.getElementById('characterGrid');
+	if (characterGrid) {
+	    characterGrid.addEventListener('click', function(e) {
+	        const button = e.target.closest('.character-btn');
+	        if (button) {
+	            e.preventDefault();
+	            e.stopPropagation();
+	            const character = button.getAttribute('data-character');
+	            selectCharacter(character);
+	        }
+	    });
+	}
+
+	
     console.log('모든 이벤트 설정 완료');
+    // 기본 캐릭터 선택 (지율이)
+    selectCharacter('jiyul');
 }
 
 // 커스텀 키보드 처리 함수
