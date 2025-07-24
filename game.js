@@ -36,7 +36,7 @@ let gameState = {
     stage: 1,
     selectedDans: [],
     selectedOps: [],
-    selectedCharacter: 'jiyul', // 이 줄 추가
+    selectedCharacter: 'Player', // 이 줄 추가
     distance: 0,
     speed: 4,
     questionActive: false,
@@ -60,7 +60,7 @@ let player = {
     hp: 100,
     animFrame: 0,
     animTimer: 0,
-    sprite: 'jiyul', // 선택된 캐릭터 스프라이트
+    sprite: 'Player', // 선택된 캐릭터 스프라이트
     velocityY: 0,
     velocityX: 0,
     isJumping: false,
@@ -439,7 +439,7 @@ function update() {
 }
 
 // 지율이 물리 업데이트
-function updateJiyulPhysics() {
+function updatePlayerPhysics() {
     // 중력 적용
     if (!player.onGround) {
         player.velocityY += GRAVITY;
@@ -1874,7 +1874,7 @@ function setupEventListeners() {
 	
     console.log('모든 이벤트 설정 완료');
     // 기본 캐릭터 선택 (지율이)
-    selectCharacter('jiyul');
+    selectCharacter('Player');
 }
 
 // 커스텀 키보드 처리 함수
