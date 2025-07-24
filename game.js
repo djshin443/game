@@ -98,18 +98,18 @@ function resizeCanvas() {
     }
     
     // 캐릭터 크기 재조정
-    if (jiyul) {
-        player.width = 16 * PIXEL_SCALE;
-        player.height = 16 * PIXEL_SCALE;
-    }
+	if (player) {  // ✅ player로 변경
+	    player.width = 16 * PIXEL_SCALE;
+	    player.height = 16 * PIXEL_SCALE;
+	}
     
     // 바닥 위치 재조정
     GROUND_Y = screenHeight - (screenHeight * 0.25);
     
-    // 지율이 위치 조정 (gameState가 존재할 때만)
-    if (jiyul && gameState && !gameState.questionActive) {
-        player.y = GROUND_Y;
-    }
+    // 플레이어 위치 조정 (gameState가 존재할 때만)
+	if (player && gameState && !gameState.questionActive) {  // ✅ player로 변경
+	    player.y = GROUND_Y;
+	}
 }
 
 // 전체화면 기능
@@ -234,6 +234,28 @@ function checkIOSFullscreen() {
 
 // 게임 시작 시 iOS 체크 추가
 window.addEventListener('load', checkIOSFullscreen);
+
+// 캐릭터 선택 함수
+function selectCharacter(character) {
+    gameState.selectedCharacter = character;
+    
+    // 모든 캐릭터 버튼의 선택 상태 초기화
+    document.querySelectorAll('.character-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // 선택된 캐릭터 버튼에 선택 표시
+    const selectedBtn = document.querySelector(`[data-character="${character}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+    
+    // 플레이어 스프라이트 변경
+    player.sprite = character;
+    
+    console.log('캐릭터 선택됨:', character);
+}
+
 
 // 게임 초기화
 function initGame() {
@@ -381,7 +403,7 @@ function update() {
     }
 
     // 지율이 물리 업데이트
-    updateJiyulPhysics();
+    updatePlayerPhysics();
     
     // 몬스터 물리 업데이트
     updateEnemyPhysics();
@@ -705,33 +727,33 @@ function render() {
         }
     });
     
-    // 지율이 그리기 (화면 좌표 사용) - 오른쪽을 바라보도록 뒤집기
-    const jiyulData = pixelData.jiyul;
-    let sprite;
-    
-    // 애니메이션 상태에 따른 스프라이트 선택
-    if (player.isJumping) {
-        sprite = jiyulData.jump;
-    } else if (gameState.isMoving && !gameState.questionActive) {
-        // 걷기 애니메이션 (0: idle, 1: walking1, 2: walking2)
-        if (jiyulData.walking1 && jiyulData.walking2) {
-            if (player.animFrame === 1) {
-                sprite = jiyulData.walking1;
-            } else if (player.animFrame === 2) {
-                sprite = jiyulData.walking2;
-            } else {
-                sprite = jiyulData.idle;
-            }
-        } else {
-            sprite = jiyulData.idle; // walking 스프라이트가 없으면 idle 사용
-        }
-    } else {
-        sprite = jiyulData.idle;
-    }
-    
-    // 일반적인 방법으로 그리기 (뒤집기 없이)
-    drawPixelSprite(sprite, jiyulData.colorMap, player.x, player.y - player.height);
-    
+    // 플레이어 그리기 (선택된 캐릭터 사용)
+	const playerData = pixelData[player.sprite];  // ✅ 선택된 캐릭터 사용
+	let sprite;
+	
+	// 애니메이션 상태에 따른 스프라이트 선택
+	if (player.isJumping) {
+	    sprite = playerData.jump;
+	} else if (gameState.isMoving && !gameState.questionActive) {
+	    // 걷기 애니메이션 (0: idle, 1: walking1, 2: walking2)
+	    if (playerData.walking1 && playerData.walking2) {
+	        if (player.animFrame === 1) {
+	            sprite = playerData.walking1;
+	        } else if (player.animFrame === 2) {
+	            sprite = playerData.walking2;
+	        } else {
+	            sprite = playerData.idle;
+	        }
+	    } else {
+	        sprite = playerData.idle; // walking 스프라이트가 없으면 idle 사용
+	    }
+	} else {
+	    sprite = playerData.idle;
+	}
+	
+	// 일반적인 방법으로 그리기 (뒤집기 없이)
+	drawPixelSprite(sprite, playerData.colorMap, player.x, player.y - player.height);
+		    
     // 파티클 그리기
     particles.forEach(particle => {
         ctx.fillStyle = particle.color;
