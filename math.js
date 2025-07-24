@@ -511,4 +511,3 @@ function startSelectedGame() {
     
     initGame();
 }
-
