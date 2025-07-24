@@ -1,851 +1,513 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>지율이의 픽셀 수학 게임</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+// 수학 연산 관련 함수들
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            margin: 0;
-            padding: 0;
-        }
+// 이스터에그 관련 변수들
+let gameStats = {
+    startTime: null,
+    correctAnswers: 0,
+    totalQuestions: 0,
+    requiredCorrectAnswers: 0
+};
 
-        body {
-            background: #000;
-            font-family: 'Jua', sans-serif;
-            overflow: hidden;
-            touch-action: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        #gameContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #5C94FC;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #gameCanvas {
-            flex: 1;
-            display: block;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-        }
-
-        /* 공주님을 위한 예쁜 UI */
-        #fullscreenBtn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            border: 3px solid #FFF;
-            color: white;
-            padding: 10px 15px;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 120px;
-            color: white;
-            font-size: 14px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 10;
-            background: linear-gradient(135deg, rgba(255,105,180,0.9), rgba(255,182,193,0.9));
-            border: 3px solid #FFF;
-            padding: 12px 20px;
-            display: none;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        #questionPanel {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-          padding: 20px;
-          border: 4px solid #FF69B4;
-          text-align: center;
-          font-size: 16px;
-          color: #D8008B;
-          display: none; /* 처음에 보이지 않게 설정 */
-          z-index: 50;
-          width: 400px;
-          max-width: 90vw;
-          font-family: 'Jua', sans-serif;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        #questionText {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #FF1493;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-
-        #enemyInfo {
-            margin: 10px 0;
-            font-size: 14px;
-            color: #FF69B4;
-            background: rgba(255,255,255,0.5);
-            padding: 8px 15px;
-            border-radius: 15px;
-            display: inline-block;
-        }
-
-        #answerInput {
-            padding: 12px 15px;
-            border: 3px solid #FF69B4;
-            font-size: 20px;
-            text-align: center;
-            margin: 10px 5px;
-            width: 120px; /* 가로 크기를 줄임 */
-            background: #FFF;
-            color: #FF1493;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-            cursor: default;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: none;
-            pointer-events: none;
-            display: inline-block;
+// 구구단 문제 생성
+function generateQuestion() {
+    if (gameState.selectedOps.length > 0) {
+        // 연산 선택된 경우
+        const op = gameState.selectedOps[Math.floor(Math.random() * gameState.selectedOps.length)];
+        let num1, num2, questionText, answer;
+        
+        switch(op) {
+            case 'add':
+                num1 = Math.floor(Math.random() * 50) + 1;
+                num2 = Math.floor(Math.random() * 50) + 1;
+                questionText = `${num1} + ${num2}`;
+                answer = num1 + num2;
+                break;
+            case 'sub':
+                num1 = Math.floor(Math.random() * 50) + 20;
+                num2 = Math.floor(Math.random() * num1) + 1;
+                questionText = `${num1} - ${num2}`;
+                answer = num1 - num2;
+                break;
+            case 'mul':
+                if (gameState.selectedDans.length > 0) {
+                    // 구구단도 선택된 경우
+                    num1 = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
+                    num2 = Math.floor(Math.random() * 9) + 1;
+                } else {
+                    num1 = Math.floor(Math.random() * 9) + 1;
+                    num2 = Math.floor(Math.random() * 9) + 1;
+                }
+                questionText = `${num1} × ${num2}`;
+                answer = num1 * num2;
+                break;
+            case 'div':
+                num2 = Math.floor(Math.random() * 9) + 1;
+                answer = Math.floor(Math.random() * 9) + 1;
+                num1 = num2 * answer;
+                questionText = `${num1} ÷ ${num2}`;
+                break;
         }
         
-        /* 커스텀 키보드 스타일 추가 */
-        #customKeyboard {
-            margin-top: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-            gap: 15px;
-        }
+        gameState.currentQuestion = questionText;
+        gameState.correctAnswer = answer;
+    } else {
+        // 구구단만 선택된 경우
+        const dan = gameState.selectedDans[Math.floor(Math.random() * gameState.selectedDans.length)];
+        const num2 = Math.floor(Math.random() * 9) + 1;
+        gameState.currentQuestion = `${dan} × ${num2}`;
+        gameState.correctAnswer = dan * num2;
+    }
+}
 
-        /* 숫자 키패드 영역 */
-        .numpad-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 8px;
-            justify-items: center;
-        }
-
-        /* 0번 버튼을 가운데 배치 */
-        .numpad-container .key-btn[data-key="0"] {
-            grid-column: 2;
-        }
-
-        /* 지우기 버튼 영역 */
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .keyboard-row {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .key-btn {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
-            border: 2px solid #FF69B4;
-            color: #FF1493;
-            font-size: 22px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Jua', sans-serif;
-            border-radius: 12px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: all 0.1s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .key-btn:before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-            transform: scale(0);
-            transition: transform 0.3s ease;
-        }
-
-        .key-btn:active:before {
-            transform: scale(1);
-        }
-
-        .key-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        .key-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            color: white;
-        }
-
-        .key-btn.key-clear {
-            background: linear-gradient(135deg, #87CEEB, #98D8E8);
-            border-color: #4682B4;
-            color: #1E90FF;
-            font-size: 28px;
-            height: 50px;
-            width: 50px;
-        }
-
-        .key-btn.key-clear:active {
-            background: linear-gradient(135deg, #4682B4, #5F9EA0);
-            color: white;
-        }
-
-        .key-btn.key-back {
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-            border-color: #FF1493;
-            color: #8B008B;
-            font-size: 20px;
-            height: 50px;
-            width: 50px;
-        }
-
-        .key-btn.key-back:active {
-            background: linear-gradient(135deg, #FF1493, #C71585);
-            color: white;
-        }    
+// 답 제출 (개선된 버전)
+function submitAnswer() {
+    const answerInput = document.getElementById('answerInput');
+    const userAnswer = parseInt(answerInput.value);
     
-        #answerInput:focus {
-            outline: none;
-            border-color: #FF1493;
-            box-shadow: 0 0 10px rgba(255,20,147,0.5);
-        }
-
-        #submitBtn {
-            background: linear-gradient(135deg, #FF1493, #FF69B4);
-            color: white;
-            border: 3px solid #FFF;
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 0 10px;
-            font-family: 'Jua', sans-serif;
-            border-radius: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        #submitBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(0,0,0,0.4);
-        }
-
-        #submitBtn:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-        }
-
-        #controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            gap: 2%;
-            z-index: 10;
-            height: 15vh;
-            min-height: 60px;
-            max-height: 80px;
-            padding: 0 2%;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .control-btn {
-            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-            border: 3px solid #FFF;
-            color: #FF1493;
-            padding: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            flex: 1;
-            font-family: 'Jua', sans-serif;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
-        }
+    if (isNaN(userAnswer)) {
+        // 입력 오류시 힌트 표시
+        answerInput.style.borderColor = '#FF0000';
+        answerInput.placeholder = '숫자만 입력하세요!';
+        setTimeout(() => {
+            answerInput.style.borderColor = '#FF69B4';
+            answerInput.placeholder = '답은?';
+        }, 1000);
+        return;
+    }
+    
+    // 통계 업데이트
+    gameStats.totalQuestions++;
+    
+    if (userAnswer === gameState.correctAnswer) {
+        // 정답! 더 화려한 효과
+        gameState.score += 20;
+        answerInput.style.borderColor = '#00FF00';
+        gameStats.correctAnswers++;
         
-        .selected {
-            background-color: orange !important;
-            color: white !important;
-        }
+        // 이스터에그 체크
+        checkEasterEgg();
+        
+        if (gameState.currentEnemy) {
+            gameState.currentEnemy.hp -= 1;
+            const enemyScreenX = gameState.currentEnemy.x - gameState.cameraX;
+            createParticles(enemyScreenX, gameState.currentEnemy.y, 'hit');
+            
+            if (gameState.currentEnemy.hp <= 0) {
+                gameState.currentEnemy.alive = false;
+                gameState.score += gameState.currentEnemy.type === 'boss' ? 100 : 50;
+                createParticles(enemyScreenX, gameState.currentEnemy.y, 'defeat');
                 
-        .control-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        #jumpBtn {
-            background: linear-gradient(135deg, #FF1493, #FF69B4);
-            color: white;
-            flex: 2;
-            font-size: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        #jumpBtn:active {
-            background: linear-gradient(135deg, #C71585, #FF1493);
-        }
-
-        #selectMenu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2vh 4vw;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        #menuTitle {
-            font-size: min(6vw, 32px);
-            color: #FF1493;
-            text-shadow: 3px 3px 0 #FFF, 4px 4px 10px rgba(0,0,0,0.3);
-            margin-bottom: 2vh;
-            text-align: center;
-            font-family: 'Jua', sans-serif;
-        }
-
-        #menuSubtitle {
-            font-size: min(3vw, 16px);
-            color: #8B008B;
-            margin-bottom: 3vh;
-            text-align: center;
-            font-family: 'Jua', sans-serif;
-            line-height: 1.5;
-            background: rgba(255,255,255,0.8);
-            padding: 1vh 3vw;
-            border-radius: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        }
-
-        #danGrid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5vh;
-            margin-bottom: 2vh;
-            width: 100%;
-            max-width: min(600px, 90vw);
-        }
-
-        .dan-btn {
-            background: linear-gradient(135deg, #FFF, #FFE4E1);
-            border: 3px solid #FF69B4;
-            color: #FF1493;
-            padding: 2vh 1vw;
-            font-size: min(4vw, 20px);
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            font-family: 'Jua', sans-serif;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            position: relative;
-            z-index: 100;
-        }
-
-        .dan-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        .dan-btn:active {
-            transform: translateY(0);
-            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
-        }
-
-        .dan-btn.selected {
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255,20,147,0.5);
-        }
-
-        .operator-btn {
-            background: linear-gradient(135deg, #FFF, #F0E68C);
-            border: 3px solid #FFD700;
-            color: #FF8C00;
-            padding: 25px 20px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            font-family: 'Jua', sans-serif;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            position: relative;
-            z-index: 100;
-        }
-
-        .operator-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        .operator-btn:active {
-            transform: translateY(0);
-            background: linear-gradient(135deg, #FFD700, #FF8C00);
-        }
-
-        .operator-btn.selected {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: white;
-            border-color: #FF6347;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255,215,0,0.5);
-        }
-
-        #selectedOptions {
-            color: #8B008B;
-            font-size: 16px;
-            margin: 20px 0;
-            background: rgba(255,255,255,0.8);
-            padding: 15px;
-            border-radius: 15px;
-        }
-
-        #selectedDans {
-            margin-bottom: 10px;
-        }
-
-        #startGameBtn {
-            background: linear-gradient(135deg, #32CD32, #90EE90);
-            border: 3px solid #FFF;
-            color: white;
-            padding: 20px 50px;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            font-family: 'Jua', sans-serif;
-            border-radius: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-
-        #startGameBtn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 7px 25px rgba(0,0,0,0.4);
-        }
-
-        #startGameBtn:active {
-            transform: translateY(0) scale(1);
-        }
-
-        #startGameBtn:disabled {
-            background: linear-gradient(135deg, #CCC, #AAA);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        @media screen and (orientation: portrait) {
-            #gameContainer::before {
-                content: "🌸 화면을 가로로 돌려주세요! 🌸";
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-                color: white;
-                padding: 5vh 10vw;
-                border: 3px solid #FFF;
-                border-radius: 20px;
-                font-size: min(5vw, 20px);
-                z-index: 9999;
-                font-family: 'Jua', sans-serif;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-                text-align: center;
-                line-height: 1.5;
+                // 몬스터 처치 시 화면 이동 재개
+                gameState.isMoving = true;
+                
+                // 전투 종료
+                document.getElementById('questionPanel').style.display = 'none';
+                gameState.questionActive = false;
+                gameState.currentEnemy = null;
+                
+                // 성공 메시지
+                showFloatingText(jiyul.x, jiyul.y - 50, '완료!', '#00FF00');
+            } else {
+                // 몬스터가 아직 살아있으면 다음 문제
+                generateQuestion();
+                updateQuestionPanel();
+                showFloatingText(jiyul.x, jiyul.y - 30, '맞았어요!', '#FFD700');
             }
-            
-            #gameCanvas, #controls, #ui, #questionPanel {
-                display: none !important;
-            }
+        }
+    } else {
+        // 오답 - 더 명확한 피드백
+        answerInput.style.borderColor = '#FF0000';
+        jiyul.hp -= 15;
+        createParticles(jiyul.x, jiyul.y, 'hurt');
+        showFloatingText(jiyul.x, jiyul.y - 30, `틀렸어요! 정답: ${gameState.correctAnswer}`, '#FF0000');
+        
+        if (jiyul.hp <= 0) {
+            gameOver();
+            return;
         }
         
-        /* 모바일 가로 모드 최적화 */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            #controls {
-                height: 12vh;
-                min-height: 50px;
-            }
-            
-            .control-btn {
-                font-size: min(3vh, 14px) !important;
-                padding: 1vh !important;
-            }
-            
-            #ui {
-                font-size: min(2.5vh, 12px) !important;
-                padding: 1vh 2vw !important;
-            }
-            
-            #questionPanel {
-                padding: 1.5vh 2vw !important;
-            }
-            
-            #questionText {
-                font-size: min(5vh, 20px) !important;
-            }
-        }
+        // 틀렸을 때 힌트 제공
+        setTimeout(() => {
+            answerInput.style.borderColor = '#FF69B4';
+            generateQuestion(); // 새 문제 생성
+            updateQuestionPanel();
+        }, 1500);
+    }
+    
+    answerInput.value = '';
+    // 모바일 키보드 방지를 위해 focus 제거
+    answerInput.blur();
+    updateUI();
+}
 
-        /* 가로 모드 메뉴 최적화 */
-        @media screen and (orientation: landscape) {
-            #selectMenu {
-                flex-direction: row;
-                flex-wrap: wrap;
-                padding: 1vh 2vw;
-            }
+// 이스터에그 체크 함수
+function checkEasterEgg() {
+    // 2~9단이 모두 선택되었는지 확인
+    const allDansSelected = [2, 3, 4, 5, 6, 7, 8, 9].every(dan => gameState.selectedDans.includes(dan));
+    
+    if (!allDansSelected) return;
+    
+    // 20분(1200초) 이내인지 확인
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - gameStats.startTime) / 1000;
+    
+    if (elapsedTime > 1200) return; // 20분 초과
+    
+    // 100% 정답률인지 확인 (최소 50문제 이상)
+    if (gameStats.totalQuestions >= 50 && gameStats.correctAnswers === gameStats.totalQuestions) {
+        showEasterEggMessage();
+    }
+}
 
-            #menuTitle {
-                width: 100%;
-                font-size: min(5vh, 28px);
-                margin-bottom: 1vh;
-            }
-
-            #menuSubtitle {
-                width: 100%;
-                font-size: min(3vh, 14px);
-                margin-bottom: 2vh;
-                padding: 0.5vh 2vw;
-            }
-
-            .menu-section {
-                flex: 1;
-                margin: 0 1vw;
-            }
-
-            #danGrid {
-                gap: 1vh;
-            }
-
-            .dan-btn, .operator-btn {
-                padding: 1.5vh 1vw !important;
-                font-size: min(3vh, 16px) !important;
-            }
-
-            #selectedOptions {
-                width: 100%;
-                margin: 1vh 0;
-                padding: 1vh 2vw;
-                font-size: min(3vh, 14px);
-            }
-
-            #startGameBtn {
-                padding: 2vh 4vw;
-                font-size: min(4vh, 20px);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-
-        <button id="fullscreenBtn">FULL</button>
-
-        <div id="selectMenu">
-            <div id="menuTitle">🌸 지율이의 수학 모험 🌸</div>
-            <div id="menuSubtitle">공주님! 오늘 공부할 것을 선택해주세요 💕</div>
-            
-            <div class="menu-section" style="position: relative; z-index: 10;">
-                <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">✨ 구구단 선택</div>
-                <div id="danGrid">
-                    <button class="dan-btn" data-dan="2">2단</button>
-                    <button class="dan-btn" data-dan="3">3단</button>
-                    <button class="dan-btn" data-dan="4">4단</button>
-                    <button class="dan-btn" data-dan="5">5단</button>
-                    <button class="dan-btn" data-dan="6">6단</button>
-                    <button class="dan-btn" data-dan="7">7단</button>
-                    <button class="dan-btn" data-dan="8">8단</button>
-                    <button class="dan-btn" data-dan="9">9단</button>
+// 이스터에그 메시지 표시
+function showEasterEggMessage() {
+    // 게임 일시정지
+    gameState.running = false;
+    gameState.isMoving = false;
+    
+    // 축하 카드 생성
+    const easterEggCard = document.createElement('div');
+    easterEggCard.id = 'easterEggCard';
+    easterEggCard.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #FFD700, #FFA500, #FF69B4);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Jua', sans-serif;
+        text-align: center;
+        padding: 20px;
+        animation: sparkle 2s infinite;
+    `;
+    
+    easterEggCard.innerHTML = `
+        <div style="background: rgba(255,255,255,0.95); padding: 40px; border-radius: 30px; border: 5px solid #FF1493; box-shadow: 0 0 50px rgba(255,215,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+            <h1 style="font-size: min(8vw, 48px); color: #FF1493; margin-bottom: 30px; text-shadow: 3px 3px 0 #FFD700;">🎉 축하해요! 🎉</h1>
+            <h2 style="font-size: min(6vw, 32px); color: #8B008B; margin-bottom: 30px;">미션을 통과했어요!</h2>
+            <div style="font-size: min(4vw, 24px); color: #FF69B4; margin-bottom: 30px; line-height: 1.5;">
+                🌟 2~9단 모든 문제를 20분 안에 100% 정답! 🌟<br>
+                정말 대단해요! 💕
+            </div>
+            <div style="background: linear-gradient(135deg, #E6E6FA, #FFE4E1); padding: 30px; border-radius: 20px; margin: 20px 0; border: 3px solid #FF69B4;">
+                <div style="font-size: min(4vw, 20px); color: #4B0082; font-weight: bold; margin-bottom: 15px;">💌 특별한 메시지 💌</div>
+                <div style="font-size: min(3.5vw, 18px); color: #8B008B; line-height: 1.6;">
+                    "July 18th, 2017 was the most blessed day<br>
+                    from Mom and Dad for you!" ✨<br><br>
+                    <span style="color: #FF1493;">2017년 07월 18일은 엄마와 아빠한테<br>
+                    가장 축복받은 날이야! 💖</span>
                 </div>
             </div>
-
-            <div class="menu-section" style="position: relative; z-index: 10;">
-                <div style="color: #FF1493; font-size: 18px; margin-bottom: 15px; font-weight: bold;">✨ 연산 선택</div>
-                <div id="operatorGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 400px; margin: 0 auto;">
-                    <button class="operator-btn" data-op="add">➕ 더하기</button>
-                    <button class="operator-btn" data-op="sub">➖ 빼기</button>
-                    <button class="operator-btn" data-op="mul">✖️ 곱하기</button>
-                    <button class="operator-btn" data-op="div">➗ 나누기</button>
-                </div>
-            </div>
-
-            <div id="selectedOptions">
-                <div id="selectedDans">선택한 구구단: 없음</div>
-                <div id="selectedOps">선택한 연산: 없음</div>
-            </div>
-            <button id="startGameBtn" disabled>🎮 모험 시작!</button>
+            <button onclick="closeEasterEgg()" style="
+                background: linear-gradient(135deg, #32CD32, #90EE90);
+                border: 3px solid #FFF;
+                color: white;
+                padding: 15px 30px;
+                font-size: min(4vw, 20px);
+                font-weight: bold;
+                cursor: pointer;
+                font-family: 'Jua', sans-serif;
+                border-radius: 25px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                margin-top: 20px;
+            ">🎮 게임 계속하기</button>
         </div>
-
-        <div id="ui">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>📚 <span id="danText">-</span></div>
-                <div>🏰 스테이지 <span id="stageText">1</span></div>
-                <div>⭐ <span id="score">0</span>점</div>
-                <div>💖 체력: <span id="hp">100</span></div>
-            </div>
-        </div>
-
-        <div id="questionPanel">
-          <div id="questionText">✨ 2 × 3 = ?</div>
-          <div id="enemyInfo">보스 체력: 3/3</div>
-          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
-            <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
-            <button id="submitBtn">⚡ 공격!</button>
-          </div>
-          
-          <!-- 수정된 키패드 레이아웃 -->
-          <div id="customKeyboard">
-            <!-- 숫자 영역 -->
-            <div class="numpad-container">
-              <button class="key-btn" data-key="1">1</button>
-              <button class="key-btn" data-key="2">2</button>
-              <button class="key-btn" data-key="3">3</button>
-              <button class="key-btn" data-key="4">4</button>
-              <button class="key-btn" data-key="5">5</button>
-              <button class="key-btn" data-key="6">6</button>
-              <button class="key-btn" data-key="7">7</button>
-              <button class="key-btn" data-key="8">8</button>
-              <button class="key-btn" data-key="9">9</button>
-              <button class="key-btn" data-key="0">0</button>
-            </div>
-            
-            <!-- 지우기 버튼 영역 -->
-            <div class="control-buttons">
-              <button class="key-btn key-back" data-key="back">⬅️</button>
-              <button class="key-btn key-clear" data-key="clear">💖</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 모바일 가로 모드 최적화 -->
-        <style>
-        @media screen and (orientation: landscape) {
-          #questionPanel {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              margin: 0;
-              padding: 1.5vh 2vw;
-              background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
-              border: 0.6vw solid #FF69B4;
-              font-size: 2.5vw;
-              color: #D8008B;
-              display: none; /* 처음에는 보이지 않게 설정 */
-              z-index: 50;
-              width: 85vw;
-              max-width: 95%;
-              height: auto;
-              max-height: 85vh;
-              overflow-y: auto;
-              font-family: 'Jua', sans-serif;
-              border-radius: 3vw;
-              box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.5);
-          }
-
-          #questionText {
-            font-size: 3.5vw;
-            margin-bottom: 1vh;
-            line-height: 1.2;
-          }
-
-          #enemyInfo {
-            font-size: 2vw;
-            padding: 0.6vh 1.5vw;
-            margin: 0.5vh 0 1vh 0;
-          }
-
-          #answerInput {
-            width: 100px; /* 가로 크기 감소 */
-            min-width: 80px;
-            font-size: 2.5vw;
-            padding: 0.8vh 1vw;
-            margin: 0.5vh 1vw;
-            border-width: 2px;
-          }
-
-          #submitBtn {
-            font-size: 2vw;
-            padding: 0.8vh 2vw;
-            margin: 0.5vh 1vw;
-            min-width: 100px;
-            border-width: 2px;
-          }
-
-          #customKeyboard {
-            margin-top: 0.8vh;
-            gap: 12px;
-          }
-          
-          .numpad-container {
-            gap: 6px;
-          }
-
-          #customKeyboard .key-btn {
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-            max-width: 10vw;
-            max-height: 10vw;
-            min-width: 35px;
-            min-height: 35px;
-            border-width: 2px;
-            border-radius: 10px;
-          }
-          
-          .control-buttons {
-            gap: 6px;
-          }
-          
-          .control-buttons .key-btn {
-            width: 50px;
-            height: 45px;
-          }
-          
-          .key-btn.key-clear {
-            font-size: 22px;
-          }
-          
-          .key-btn.key-back {
-            font-size: 18px;
-          }
-          
-          /* 매우 낮은 화면 높이 대응 */
-          @media (max-height: 400px) {
-            #questionPanel {
-              padding: 1vh 2vw;
-            }
-            
-            #questionText {
-              font-size: 3vw;
-              margin-bottom: 0.5vh;
-            }
-            
-            #enemyInfo {
-              font-size: 1.8vw;
-              padding: 0.4vh 1vw;
-              margin: 0.3vh 0 0.5vh 0;
-            }
-            
-            #customKeyboard .key-btn {
-              width: 38px;
-              height: 38px;
-              font-size: 18px;
-            }
-            
-            .control-buttons .key-btn {
-              width: 42px;
-              height: 38px;
-            }
-            
-            .key-btn.key-clear {
-              font-size: 20px;
-            }
-            
-            .key-btn.key-back {
-              font-size: 16px;
-            }
-          }
+    `;
+    
+    // CSS 애니메이션 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes sparkle {
+            0%, 100% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.2) saturate(1.3); }
         }
-        </style>
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(easterEggCard);
+    
+    // 축하 파티클 효과
+    createCelebrationParticles();
+}
 
-        <div id="controls">
-            <button class="control-btn" id="jumpBtn">🦄 점프!</button>
-            <button class="control-btn" id="menuBtn">🏠 메뉴</button>
-            <button class="control-btn" id="helpBtn">💡 도움</button>
-        </div>
-    </div>
+// 이스터에그 닫기
+function closeEasterEgg() {
+    const easterEggCard = document.getElementById('easterEggCard');
+    if (easterEggCard) {
+        easterEggCard.remove();
+    }
+    
+    // 게임 재개
+    gameState.running = true;
+    gameState.isMoving = true;
+    gameLoop();
+}
 
-    <script src="characters.js"></script>
-    <script src="math.js"></script>
-    <script src="game.js"></script>       
-</body>
-</html>
+// 축하 파티클 효과
+function createCelebrationParticles() {
+    for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+            const colors = ['#FFD700', '#FF69B4', '#00FF00', '#FF6347', '#9370DB', '#FF1493'];
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 10000;
+                animation: celebrate 3s ease-out forwards;
+            `;
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 3000);
+        }, i * 50);
+    }
+    
+    // 축하 애니메이션 CSS
+    const celebrateStyle = document.createElement('style');
+    celebrateStyle.textContent = `
+        @keyframes celebrate {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1) translateY(-100px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) translateY(-200px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(celebrateStyle);
+}
+
+// 떠다니는 텍스트 효과 (새 기능)
+function showFloatingText(x, y, text, color) {
+    const textParticle = {
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 60,
+        vy: -2,
+        alpha: 1.0
+    };
+    
+    // 텍스트 파티클을 별도로 관리
+    if (!window.textParticles) {
+        window.textParticles = [];
+    }
+    window.textParticles.push(textParticle);
+}
+
+// 텍스트 파티클 업데이트 (render 함수에서 호출해야 함)
+function updateTextParticles(ctx) {
+    if (!window.textParticles) return;
+    
+    window.textParticles = window.textParticles.filter(particle => {
+        particle.y += particle.vy;
+        particle.life--;
+        particle.alpha = particle.life / 60;
+        
+        if (particle.life > 0) {
+            ctx.save();
+            ctx.globalAlpha = particle.alpha;
+            ctx.fillStyle = particle.color;
+            ctx.font = 'bold 16px Jua';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(particle.text, particle.x, particle.y);
+            ctx.fillText(particle.text, particle.x, particle.y);
+            ctx.restore();
+        }
+        
+        return particle.life > 0;
+    });
+}
+
+
+function updateQuestionPanel() {
+    // 추가: 질문이 활성화된 상태일 때만 계속 진행
+    if (!gameState.questionActive) return;
+    
+    document.getElementById('questionText').textContent = `✨ ${gameState.currentQuestion} = ?`;
+    if (gameState.currentEnemy) {
+        const enemyName = gameState.currentEnemy.type === 'boss' ? '👑 보스' : 
+                         gameState.currentEnemy.type === 'slime' ? '💧 슬라임' : '👹 고블린';
+        document.getElementById('enemyInfo').textContent = 
+            `${enemyName} 체력: ${gameState.currentEnemy.hp}/${gameState.currentEnemy.maxHp}`;
+    }
+    
+    // 입력창 스타일 초기화
+    const answerInput = document.getElementById('answerInput');
+    answerInput.style.borderColor = '#FF69B4';
+    answerInput.placeholder = '답은?';
+    answerInput.value = '';
+    
+    // 모바일 키보드 완전 차단
+    answerInput.setAttribute('readonly', 'readonly');
+    answerInput.setAttribute('inputmode', 'none');
+    answerInput.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('focus', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+    answerInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+        document.activeElement.blur();
+    });
+}
+// 구구단 선택 함수
+function toggleDan(dan) {
+    console.log('toggleDan 호출됨, dan:', dan);
+    
+    const index = gameState.selectedDans.indexOf(dan);
+    const button = document.querySelector(`[data-dan="${dan}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, dan:', dan);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedDans.push(dan);
+        button.classList.add('selected');
+        console.log('구구단 추가됨:', dan);
+    } else {
+        gameState.selectedDans.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('구구단 제거됨:', dan);
+    }
+    
+    console.log('현재 선택된 구구단:', gameState.selectedDans);
+    updateSelectedDisplay();
+}
+
+// 연산 선택 함수
+function toggleOperator(op) {
+    console.log('toggleOperator 호출됨, op:', op);
+    
+    const index = gameState.selectedOps.indexOf(op);
+    const button = document.querySelector(`[data-op="${op}"]`);
+    
+    if (!button) {
+        console.error('버튼을 찾을 수 없음, op:', op);
+        return;
+    }
+    
+    if (index === -1) {
+        gameState.selectedOps.push(op);
+        button.classList.add('selected');
+        console.log('연산 추가됨:', op);
+    } else {
+        gameState.selectedOps.splice(index, 1);
+        button.classList.remove('selected');
+        console.log('연산 제거됨:', op);
+    }
+    
+    console.log('현재 선택된 연산:', gameState.selectedOps);
+    updateSelectedDisplay();
+}
+
+// 선택한 내용 표시 업데이트
+function updateSelectedDisplay() {
+    const selectedDansElement = document.getElementById('selectedDans');
+    const selectedOpsElement = document.getElementById('selectedOps');
+    const startButton = document.getElementById('startGameBtn');
+    
+    // 구구단 표시
+    if (gameState.selectedDans.length > 0) {
+        const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
+        selectedDansElement.textContent = `선택한 구구단: ${sortedDans.join(', ')}단`;
+    } else {
+        selectedDansElement.textContent = '선택한 구구단: 없음';
+    }
+    
+    // 연산 표시
+    if (gameState.selectedOps.length > 0) {
+        const opNames = {
+            'add': '더하기',
+            'sub': '빼기',
+            'mul': '곱하기',
+            'div': '나누기'
+        };
+        const selectedOpNames = gameState.selectedOps.map(op => opNames[op]);
+        selectedOpsElement.textContent = `선택한 연산: ${selectedOpNames.join(', ')}`;
+    } else {
+        selectedOpsElement.textContent = '선택한 연산: 없음';
+    }
+    
+    // 시작 버튼 활성화 조건
+    startButton.disabled = gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0;
+    
+    console.log('선택 표시 업데이트 완료');
+    console.log('구구단:', gameState.selectedDans);
+    console.log('연산:', gameState.selectedOps);
+    console.log('시작 버튼 비활성화:', startButton.disabled);
+}
+
+// 게임 시작
+function startSelectedGame() {
+    if (gameState.selectedDans.length === 0 && gameState.selectedOps.length === 0) {
+        alert('구구단이나 연산을 하나 이상 선택해주세요!');
+        return;
+    }
+    
+    // 게임 통계 초기화
+    gameStats.startTime = Date.now();
+    gameStats.correctAnswers = 0;
+    gameStats.totalQuestions = 0;
+    
+    document.getElementById('selectMenu').style.display = 'none';
+    document.getElementById('ui').style.display = 'block';
+    
+    // UI 텍스트 업데이트
+    let displayText = '';
+    if (gameState.selectedDans.length > 0) {
+        const sortedDans = gameState.selectedDans.sort((a, b) => a - b);
+        displayText = sortedDans.join(',') + '단';
+    }
+    if (gameState.selectedOps.length > 0) {
+        const opSymbols = {
+            'add': '+',
+            'sub': '-',
+            'mul': '×',
+            'div': '÷'
+        };
+        const symbols = gameState.selectedOps.map(op => opSymbols[op]).join(',');
+        displayText += (displayText ? ' ' : '') + symbols;
+    }
+    document.getElementById('danText').textContent = displayText;
+    
+    initGame();
+}
