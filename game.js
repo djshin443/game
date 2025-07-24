@@ -733,9 +733,8 @@ function render() {
 	
 	// 애니메이션 상태에 따른 스프라이트 선택
 	if (player.isJumping) {
-	    sprite = playerData.jump;
+	    sprite = playerData.jump;  // ✅ playerData 사용
 	} else if (gameState.isMoving && !gameState.questionActive) {
-	    // 걷기 애니메이션 (0: idle, 1: walking1, 2: walking2)
 	    if (playerData.walking1 && playerData.walking2) {
 	        if (player.animFrame === 1) {
 	            sprite = playerData.walking1;
