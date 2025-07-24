@@ -351,8 +351,8 @@ function generateMoreEnemies() {
             y: GROUND_Y,
             width: 16 * PIXEL_SCALE,
             height: 16 * PIXEL_SCALE,
-            hp: 3 + Math.floor(gameState.stage / 2),
-            maxHp: 3 + Math.floor(gameState.stage / 2),
+            hp: 1, // 보스는 한 번의 문제로 처치
+            maxHp: 1,
             type: 'boss',
             alive: true,
             animFrame: 0,
