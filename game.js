@@ -53,7 +53,7 @@ let gameState = {
 let jiyul = {
     x: 100,
     y: 240,
-    worldX: 100,
+    worldX: 100, // 월드 좌표
     width: 16 * PIXEL_SCALE,
     height: 16 * PIXEL_SCALE,
     hp: 100,
@@ -64,15 +64,13 @@ let jiyul = {
     velocityX: 0,
     isJumping: false,
     onGround: true,
-    runSpeed: 4,
-    doubleJumped: false // 이중 점프 여부 추가
+    runSpeed: 4
 };
 
 // 게임 오브젝트들
 let obstacles = [];
 let enemies = [];
 let particles = [];
-let platforms = [];
 
 // 캔버스 크기 조정 (모바일 가로 최적화)
 function resizeCanvas() {
@@ -258,7 +256,6 @@ function initGame() {
     jiyul.velocityX = 0;
     jiyul.onGround = true;
     jiyul.isJumping = false;
-    jiyul.doubleJumped = false;
     
     generateLevel();
     gameLoop();
@@ -273,57 +270,18 @@ function generateLevel() {
     // 장애물 배치 (더 많이, 더 전략적으로)
     const obstacleSpacing = 200 + Math.random() * 150;
     for (let i = 0; i < 12; i++) {
-    const types = ['rock', 'spike', 'pipe', 'floor_spike'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    
-    const obstacleX = 600 + i * obstacleSpacing;
-    
-    obstacles.push({
-        x: obstacleX,
-        y: GROUND_Y,
-        width: 16 * PIXEL_SCALE,
-        height: 16 * PIXEL_SCALE,
-        type: type,
-        passed: false,
-        damageDealt: false
-    });
-    
-    // ✅ 가시방석이나 spike 위에 플랫폼 추가
-    if (type === 'floor_spike' || type === 'spike') {
-        platforms.push({
-            x: obstacleX,
-            y: GROUND_Y - (16 * PIXEL_SCALE) - 30,
+        const types = ['rock', 'spike', 'pipe'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        obstacles.push({
+            x: 600 + i * obstacleSpacing,
+            y: GROUND_Y,
             width: 16 * PIXEL_SCALE,
-	    height: 8 * PIXEL_SCALE, // 플랫폼 높이
+            height: 16 * PIXEL_SCALE,
+            type: type,
             passed: false
         });
     }
-    
-    // 가끔 연속된 바닥 가시방석 배치
-    if (type === 'floor_spike' && Math.random() > 0.5) {
-        for (let j = 1; j <= 2; j++) {
-            const extraSpikeX = obstacleX + j * 16 * PIXEL_SCALE;
-            obstacles.push({
-                x: extraSpikeX,
-                y: GROUND_Y,
-                width: 16 * PIXEL_SCALE,
-                height: 16 * PIXEL_SCALE,
-                type: 'floor_spike',
-                passed: false,
-                damageDealt: false
-            });
-            
-            // ✅ 추가 가시방석에도 플랫폼 추가
-            platforms.push({
-                x: extraSpikeX,
-                y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
-                width: 16 * PIXEL_SCALE,
-                height: 6 * PIXEL_SCALE,
-                passed: false
-            });
-        }
-    }
-}
 
     // 몬스터 배치 (무한 생성)
     generateMoreEnemies();
@@ -390,65 +348,6 @@ function generateMoreEnemies() {
         });
     }
 }
-// 장애물 무한 생성 함수 추가 (generateMoreEnemies 함수 아래에 추가)
-function generateMoreObstacles() {
-    const currentMaxX = Math.max(...obstacles.map(o => o.x), jiyul.worldX);
-    const startX = Math.max(currentMaxX + 500, jiyul.worldX + 1000);
-    
-    const obstacleSpacing = 200 + Math.random() * 150;
-    for (let i = 0; i < 8; i++) {
-        const types = ['rock', 'spike', 'pipe', 'floor_spike'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        
-        const obstacleX = startX + i * obstacleSpacing;
-        
-        obstacles.push({
-            x: obstacleX,
-            y: GROUND_Y,
-            width: 16 * PIXEL_SCALE,
-            height: 16 * PIXEL_SCALE,
-            type: type,
-            passed: false,
-            damageDealt: false
-        });
-        
-        // ✅ 가시방석이나 spike 위에 플랫폼 추가
-        if (type === 'floor_spike' || type === 'spike') {
-            platforms.push({
-                x: obstacleX,
-                y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
-                width: 16 * PIXEL_SCALE,
-                height: 6 * PIXEL_SCALE,
-                passed: false
-            });
-        }
-        
-        // 가끔 연속된 바닥 가시방석 배치
-        if (type === 'floor_spike' && Math.random() > 0.5) {
-            for (let j = 1; j <= 2; j++) {
-                const extraSpikeX = obstacleX + j * 16 * PIXEL_SCALE;
-                obstacles.push({
-                    x: extraSpikeX,
-                    y: GROUND_Y,
-                    width: 16 * PIXEL_SCALE,
-                    height: 16 * PIXEL_SCALE,
-                    type: 'floor_spike',
-                    passed: false,
-                    damageDealt: false
-                });
-                
-                // ✅ 추가 가시방석에도 플랫폼 추가
-                platforms.push({
-                    x: extraSpikeX,
-                    y: GROUND_Y - (16 * PIXEL_SCALE) - 10,
-                    width: 16 * PIXEL_SCALE,
-                    height: 6 * PIXEL_SCALE,
-                    passed: false
-                });
-            }
-        }
-    }
-}
 
 // 메인 게임 루프
 function gameLoop() {
@@ -462,14 +361,14 @@ function gameLoop() {
 // 게임 업데이트
 function update() {
     // 화면이 움직일 때만 거리와 배경 업데이트
-    if (gameState.isMoving && !gameState.questionActive) {
-        gameState.distance += gameState.speed;
-        gameState.backgroundOffset += gameState.speed * 0.5;
-        gameState.cameraX += gameState.speed;
-        
-        // 지율이도 자동으로 앞으로 이동
-        jiyul.worldX += gameState.speed;
-    }
+	if (gameState.isMoving && !gameState.questionActive) {
+		gameState.distance += gameState.speed;
+		gameState.backgroundOffset += gameState.speed * 0.5; // 양수로 증가
+		gameState.cameraX += gameState.speed;
+		
+		// 지율이도 자동으로 앞으로 이동
+		jiyul.worldX += gameState.speed;
+	}
 
     // 화면 흔들림 효과 업데이트
     if (gameState.shakeTimer > 0) {
@@ -493,16 +392,7 @@ function update() {
     enemies = enemies.filter(enemy => 
         enemy.alive && (enemy.x > gameState.cameraX - 500)
     );
-    
-    // 지나간 장애물들 정리 (너무 뒤로 간 장애물 제거)
-    obstacles = obstacles.filter(obstacle => 
-        obstacle.x > gameState.cameraX - 1000
-    );
-    // 지나간 플랫폼들 정리
-    platforms = platforms.filter(platform => 
-        platform.x > gameState.cameraX - 1000
-    );
-	
+
     // 새로운 몬스터 생성 (앞쪽에 몬스터가 부족하면)
     const aheadEnemies = enemies.filter(enemy => 
         enemy.x > jiyul.worldX && enemy.x < jiyul.worldX + 2000
@@ -511,15 +401,12 @@ function update() {
     if (aheadEnemies.length < 3) {
         generateMoreEnemies();
     }
-    
-    // 새로운 장애물 생성 (앞쪽에 장애물이 부족하면)
-    const aheadObstacles = obstacles.filter(obstacle => 
-        obstacle.x > jiyul.worldX && obstacle.x < jiyul.worldX + 2000
-    );
-    
-    if (aheadObstacles.length < 5) {
-        generateMoreObstacles();
-    }
+
+    // 스테이지 클리어 조건 제거 (무한 게임)
+    // const allEnemiesDefeated = enemies.every(enemy => !enemy.alive);
+    // if (allEnemiesDefeated && gameState.distance > 2000) {
+    //     nextStage();
+    // }
     
     // 거리 기반 스테이지 업그레이드
     if (gameState.distance > gameState.stage * 3000) {
@@ -529,13 +416,9 @@ function update() {
 
 // 지율이 물리 업데이트
 function updateJiyulPhysics() {
-    // 중력 적용 (더 자연스러운 중력)
+    // 중력 적용
     if (!jiyul.onGround) {
         jiyul.velocityY += GRAVITY;
-        // 최대 낙하 속도 제한
-        if (jiyul.velocityY > 20) {
-            jiyul.velocityY = 20;
-        }
     }
     
     // Y축 이동
@@ -552,70 +435,15 @@ function updateJiyulPhysics() {
         }
     }
     
-    // ✅ 플랫폼 충돌 체크 추가
-    let onPlatform = false;
-    platforms.forEach(platform => {
-        // 플랫폼 위에 있는지 체크 (착지 판정 개선)
-        const playerBottom = jiyul.y + jiyul.height;
-        const playerLeft = jiyul.worldX;
-        const playerRight = jiyul.worldX + jiyul.width;
-        const platformTop = platform.y;
-        const platformBottom = platform.y + platform.height;
-        
-        // X축 충돌 체크 (여유 있게)
-        if (playerRight > platform.x - 5 && 
-            playerLeft < platform.x + platform.width + 5) {
-            
-            // Y축 충돌 체크 (플랫폼 위에서 아래로 떨어질 때)
-            if (playerBottom >= platformTop && 
-                playerBottom <= platformBottom + 15 && // 판정 여유를 늘림
-                jiyul.velocityY >= 0) { // 떨어지는 중일 때만
-                
-                // 플랫폼 위에 정확히 배치
-                jiyul.y = platformTop - jiyul.height;
-                jiyul.velocityY = 0;
-                jiyul.onGround = true;
-                jiyul.isJumping = false;
-                jiyul.doubleJumped = false;
-                onPlatform = true;
-                
-                // 플랫폼 통과 보너스
-                if (!platform.passed) {
-                    platform.passed = true;
-                    gameState.score += 5;
-                    createParticles(jiyul.x, jiyul.y, 'hint');
-                    showFloatingText(jiyul.x, jiyul.y - 20, '+5 안전!', '#00FF00');
-                    updateUI();
-                }
-            }
-        }
-    });
-    
-    // 바닥 충돌 체크 (플랫폼 위가 아닐 때만)
-    if (!onPlatform && jiyul.y >= GROUND_Y) {
+    // 바닥 충돌 체크
+    if (jiyul.y >= GROUND_Y) {
         jiyul.y = GROUND_Y;
-        
-        // 착지 시 속도에 따른 데미지 (높은 곳에서 떨어질 때)
-        if (jiyul.velocityY > 15) {
-            const fallDamage = Math.floor((jiyul.velocityY - 15) * 2);
-            jiyul.hp -= fallDamage;
-            createParticles(jiyul.x, jiyul.y, 'hurt');
-            showFloatingText(jiyul.x, jiyul.y - 30, `-${fallDamage} HP`, '#FF0000');
-            updateUI();
-            
-            if (jiyul.hp <= 0) {
-                gameOver();
-                return;
-            }
-        }
-        
         jiyul.velocityY = 0;
         jiyul.onGround = true;
         jiyul.isJumping = false;
-        jiyul.doubleJumped = false; // 이중 점프 리셋
         
         // 착지 시 파티클 효과
-        if (Math.abs(jiyul.velocityY) > 2) {
+        if (jiyul.velocityX > 2) {
             createParticles(jiyul.x, jiyul.y, 'hint');
         }
     }
@@ -719,7 +547,6 @@ function checkCollisions() {
                     jiyul.hp -= 20;
                     obstacle.passed = true;
                     createParticles(jiyul.x, jiyul.y, 'hurt');
-                    showFloatingText(jiyul.x, jiyul.y - 30, '-20 HP', '#FF0000');
                     
                     // 화면 흔들림 효과
                     gameState.shakeTimer = 20;
@@ -731,43 +558,8 @@ function checkCollisions() {
                         return;
                     }
                 }
-                // 바닥 가시방석은 밟으면 지속 데미지
-                else if (obstacle.type === 'floor_spike') {
-                    // 발이 가시에 닿았는지 체크 (캐릭터 하단 부분)
-                    const footY = jiyul.y + jiyul.height * 0.8;
-                    const spikeTopY = obstacle.y;
-                    
-                    if (footY >= spikeTopY && !obstacle.damageDealt) {
-                        jiyul.hp -= 10;
-                        obstacle.damageDealt = true;
-                        createParticles(jiyul.x, jiyul.y + jiyul.height, 'hurt');
-                        showFloatingText(jiyul.x, jiyul.y - 30, '-10 HP', '#FF0000');
-                        
-                        // 화면 흔들림 효과
-                        gameState.shakeTimer = 15;
-                        
-                        // 약간 위로 튕기는 효과
-                        if (jiyul.onGround) {
-                            jiyul.velocityY = -8;
-                            jiyul.onGround = false;
-                            jiyul.isJumping = true;
-                        }
-                        
-                        updateUI();
-                        
-                        if (jiyul.hp <= 0) {
-                            gameOver();
-                            return;
-                        }
-                        
-                        // 0.5초 후 다시 데미지 가능
-                        setTimeout(() => {
-                            obstacle.damageDealt = false;
-                        }, 500);
-                    }
-                }
                 // 다른 장애물은 점프 중이 아닐 때만 막힘
-                else if (obstacle.type !== 'spike' && obstacle.type !== 'floor_spike' && jiyul.onGround) {
+                else if (obstacle.type !== 'spike' && jiyul.onGround) {
                     // 장애물 앞에서 멈춤 (바닥에 있을 때만)
                     jiyul.worldX = obstacle.x - jiyul.width - 5;
                     jiyul.velocityX = 0;
@@ -787,12 +579,10 @@ function checkCollisions() {
                 // 장애물을 넘어갔으면 다시 이동 시작
                 if (jiyul.worldX > obstacle.x + obstacle.width && !obstacle.passed) {
                     obstacle.passed = true;
-                    if (obstacle.type !== 'floor_spike') { // 바닥 가시는 점수 안줌
-                        gameState.isMoving = true;
-                        gameState.score += 10; // 장애물 통과 보너스
-                        createParticles(jiyul.x, jiyul.y - 20, 'hint'); // 성공 파티클
-                        updateUI();
-                    }
+                    gameState.isMoving = true;
+                    gameState.score += 10; // 장애물 통과 보너스
+                    createParticles(jiyul.x, jiyul.y - 20, 'hint'); // 성공 파티클
+                    updateUI();
                 }
             }
         }
@@ -845,38 +635,17 @@ function checkBoxCollision(box1, box2) {
 
 // 애니메이션 업데이트
 function updateAnimations() {
-    // 지율이 애니메이션 (상태에 따라 다른 속도)
+    // 지율이 애니메이션 (걷기 애니메이션 추가)
     jiyul.animTimer++;
-    
-    // 걷기 애니메이션 속도
-    let animSpeed = 10;
-    if (jiyul.isJumping) {
-        animSpeed = 20; // 점프 중에는 애니메이션 느리게
-    } else if (!gameState.isMoving) {
-        animSpeed = 30; // 멈춰있을 때는 더 느리게
-    }
-    
-    if (jiyul.animTimer >= animSpeed) {
+    if (jiyul.animTimer >= 15) { // 걷기 애니메이션 속도 조절
         jiyul.animFrame = (jiyul.animFrame + 1) % 3; // 0, 1, 2로 순환
         jiyul.animTimer = 0;
     }
     
-    // 적 애니메이션 (적 타입에 따라 다른 속도)
+    // 적 애니메이션
     enemies.forEach(enemy => {
         if (enemy.alive) {
-            enemy.animTimer = (enemy.animTimer || 0) + 1;
-            
-            let enemyAnimSpeed = 15;
-            if (enemy.type === 'boss') {
-                enemyAnimSpeed = 20;
-            } else if (enemy.type === 'slime') {
-                enemyAnimSpeed = 25;
-            }
-            
-            if (enemy.animTimer >= enemyAnimSpeed) {
-                enemy.animFrame = (enemy.animFrame + 1) % 2;
-                enemy.animTimer = 0;
-            }
+            enemy.animFrame = (enemy.animFrame + 1) % 2;
         }
     });
 }
@@ -912,81 +681,19 @@ function render() {
     
     // 장애물 그리기 (카메라 오프셋 적용)
     obstacles.forEach(obstacle => {
-    const screenX = obstacle.x - gameState.cameraX;
-    if (screenX > -100 && screenX < canvas.width + 100) {
-        const data = pixelData[obstacle.type];
-        if (data) {
+        const screenX = obstacle.x - gameState.cameraX;
+        if (screenX > -100 && screenX < canvas.width + 100) {
+            const data = pixelData[obstacle.type];
             drawPixelSprite(data.sprite, data.colorMap, screenX, obstacle.y - obstacle.height);
             
-            // ✅ 여기에 새로운 코드 추가! - 데미지 장애물에 안전선 표시
-            if (obstacle.type === 'floor_spike' || obstacle.type === 'spike') {
-                // 안전선 그리기
-                ctx.strokeStyle = '#00FF00'; // 초록색 안전선
-                ctx.lineWidth = 3;
-                ctx.setLineDash([5, 5]); // 점선 패턴
-                
-                // 장애물 위 약간 위에 선 그리기
-                const safeLineY = obstacle.y - obstacle.height - 30;
-                ctx.beginPath();
-                ctx.moveTo(screenX - 5, safeLineY);
-                ctx.lineTo(screenX + obstacle.width + 5, safeLineY);
-                ctx.stroke();
-                
-                // 점선 패턴 리셋
-                ctx.setLineDash([]);
-                
-                // 안전 높이 표시 텍스트 (작게)
-                ctx.fillStyle = '#00FF00';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('SAFE', screenX + obstacle.width/2, safeLineY - 5);
-            }
-            
-            // 바닥 가시방석 경고 효과 (기존 코드 유지)
-            if (obstacle.type === 'floor_spike' && !gameState.questionActive) {
-		    // 붉은 빛 효과
-		    const pulse = 0.3 + Math.sin(gameState.distance * 0.2) * 0.2;
-		    ctx.fillStyle = 'rgba(255, 0, 0, ' + pulse + ')';
-		    ctx.fillRect(screenX - 5, obstacle.y - obstacle.height - 5, obstacle.width + 10, obstacle.height + 10);
-		    
-		    // 위험 표시 (느낌표)
-		    if (Math.sin(gameState.distance * 0.3) > 0) {
-		        ctx.fillStyle = '#FFFF00';
-		        ctx.font = 'bold 20px Arial';
-		        ctx.textAlign = 'center';
-		        ctx.fillText('!', screenX + obstacle.width/2, obstacle.y - obstacle.height - 10);
-		    }
-		}
-		                
-                // 장애물이 멈춘 이유라면 점프 힌트 표시
-                if (!gameState.isMoving && obstacle.type !== 'floor_spike' && Math.abs(jiyul.worldX - obstacle.x) < 100) {
-                    ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                    ctx.fillRect(screenX, obstacle.y - obstacle.height - 10, obstacle.width, 5);
-                }
+            // 장애물이 멈춘 이유라면 점프 힌트 표시
+            if (!gameState.isMoving && Math.abs(jiyul.worldX - obstacle.x) < 100) {
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.fillRect(screenX, obstacle.y - obstacle.height - 10, obstacle.width, 5);
             }
         }
     });
-	
-    // 플랫폼 그리기 (장애물 위에)
-    platforms.forEach(platform => {
-        const screenX = platform.x - gameState.cameraX;
-        if (screenX > -100 && screenX < canvas.width + 100) {
-            // 플랫폼 그리기
-            const data = pixelData.safe_platform;
-            if (data) {
-                drawPixelSprite(data.sprite, data.colorMap, screenX, platform.y);
-            }
-        
-            // 플랫폼 빛나는 효과
-            const glow = 0.3 + Math.sin(gameState.distance * 0.1) * 0.2;
-            ctx.fillStyle = `rgba(255, 215, 0, ${glow})`;
-            ctx.fillRect(screenX - 2, platform.y - 2, platform.width + 4, platform.height + 4);
-        }
-    });
-
-
     
-	
     // 적 그리기 (카메라 오프셋 적용)
     enemies.forEach(enemy => {
         if (!enemy.alive) return;
@@ -1801,11 +1508,8 @@ function nextStage() {
     gameState.speed += 0.5;
     alert(`🎉 스테이지 ${gameState.stage - 1} 클리어! 🎉\n스테이지 ${gameState.stage}로 이동합니다!`);
     
-    // 새로운 몬스터들 추가
+    // 새로운 몬스터들 추가 (기존 몬스터는 유지)
     generateMoreEnemies();
-    
-    // 새로운 장애물들도 추가
-    generateMoreObstacles();
 }
 
 // 파티클 생성 (개선된 버전)
@@ -1846,34 +1550,25 @@ function updateParticles() {
 // 점프 함수 (개선된 버전)
 function jump() {
     if (jiyul.onGround && !gameState.questionActive) {
-        const jumpPower = getJumpPower();
+        const jumpPower = getJumpPower(); // 디바이스별 점프 파워 사용
         jiyul.velocityY = jumpPower;
         
+        // 모바일에서는 전진 속도도 조정
         const forwardSpeed = isMobileDevice() ? JUMP_FORWARD_SPEED * 1.2 : JUMP_FORWARD_SPEED * 1.5;
         jiyul.velocityX = forwardSpeed;
         
         jiyul.isJumping = true;
         jiyul.onGround = false;
         
+        // 점프 시 화면 이동 강제 재개
         gameState.isMoving = true;
         
+        // 점프 효과음 대신 파티클
         createParticles(jiyul.x, jiyul.y, 'hint');
         
+        // 점수 보너스 (점프 성공)
         gameState.score += 1;
         updateUI();
-        
-        jiyul.animFrame = 0;
-        jiyul.animTimer = 0;
-    } else if (jiyul.isJumping && jiyul.velocityY < 0 && jiyul.velocityY > getJumpPower() / 2) {
-        // 이중 점프 (한 번만 가능) - 스테이지 제한 제거!
-        if (!jiyul.doubleJumped) { // && gameState.stage >= 3 삭제
-            const jumpPower = getJumpPower();
-            jiyul.velocityY = jumpPower * 0.7;
-            jiyul.velocityX = JUMP_FORWARD_SPEED * 0.5;
-            jiyul.doubleJumped = true;
-            createParticles(jiyul.x, jiyul.y, 'hint');
-            showFloatingText(jiyul.x, jiyul.y - 20, '이중 점프!', '#FFD700');
-        }
     }
 }
 
