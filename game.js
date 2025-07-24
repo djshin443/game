@@ -36,7 +36,7 @@ let gameState = {
     stage: 1,
     selectedDans: [],
     selectedOps: [],
-    selectedCharacter: 'Player', // 이 줄 추가
+    selectedCharacter: 'jiyul', // 수정됨
     distance: 0,
     speed: 4,
     questionActive: false,
@@ -50,7 +50,7 @@ let gameState = {
     shakeTimer: 0
 };
 
-// 지율이 캐릭터 초기화
+// 플레이어 캐릭터 초기화
 let player = {
     x: 100,
     y: 240,
@@ -60,7 +60,7 @@ let player = {
     hp: 100,
     animFrame: 0,
     animTimer: 0,
-    sprite: 'Player', // 선택된 캐릭터 스프라이트
+    sprite: 'jiyul', // 수정됨
     velocityY: 0,
     velocityX: 0,
     isJumping: false,
@@ -98,7 +98,7 @@ function resizeCanvas() {
     }
     
     // 캐릭터 크기 재조정
-	if (player) {  // ✅ player로 변경
+	if (player) {
 	    player.width = 16 * PIXEL_SCALE;
 	    player.height = 16 * PIXEL_SCALE;
 	}
@@ -107,7 +107,7 @@ function resizeCanvas() {
     GROUND_Y = screenHeight - (screenHeight * 0.25);
     
     // 플레이어 위치 조정 (gameState가 존재할 때만)
-	if (player && gameState && !gameState.questionActive) {  // ✅ player로 변경
+	if (player && gameState && !gameState.questionActive) {
 	    player.y = GROUND_Y;
 	}
 }
@@ -256,7 +256,6 @@ function selectCharacter(character) {
     console.log('캐릭터 선택됨:', character);
 }
 
-
 // 게임 초기화
 function initGame() {
     gameState.running = true;
@@ -390,7 +389,7 @@ function update() {
 		gameState.backgroundOffset += gameState.speed * 0.5; // 양수로 증가
 		gameState.cameraX += gameState.speed;
 		
-		// 지율이도 자동으로 앞으로 이동
+		// 플레이어도 자동으로 앞으로 이동
 		player.worldX += gameState.speed;
 	}
 
@@ -402,7 +401,7 @@ function update() {
         gameState.screenShake = 0;
     }
 
-    // 지율이 물리 업데이트
+    // 플레이어 물리 업데이트
     updatePlayerPhysics();
     
     // 몬스터 물리 업데이트
@@ -438,7 +437,7 @@ function update() {
     }
 }
 
-// 지율이 물리 업데이트
+// 플레이어 물리 업데이트
 function updatePlayerPhysics() {
     // 중력 적용
     if (!player.onGround) {
@@ -476,7 +475,7 @@ function updatePlayerPhysics() {
     const targetScreenX = canvas.width / 4;
     player.x = targetScreenX;
     
-    // 카메라를 지율이의 월드 위치에 맞춰 조정 (지율이는 계속 오른쪽으로 진행)
+    // 카메라를 플레이어의 월드 위치에 맞춰 조정 (플레이어는 계속 오른쪽으로 진행)
     gameState.cameraX = player.worldX - targetScreenX;
 }
 
@@ -561,7 +560,7 @@ function checkCollisions() {
         // 화면에 있는 장애물만 체크
         if (obstacleScreenX > -100 && obstacleScreenX < canvas.width + 100) {
             
-            // 지율이 월드 좌표로 충돌 체크
+            // 플레이어 월드 좌표로 충돌 체크
             if (checkBoxCollision(
                 {x: player.worldX, y: player.y, width: player.width, height: player.height},
                 {x: obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height}
@@ -652,7 +651,7 @@ function checkBoxCollision(box1, box2) {
 
 // 애니메이션 업데이트
 function updateAnimations() {
-    // 지율이 애니메이션 (걷기 애니메이션 추가)
+    // 플레이어 애니메이션 (걷기 애니메이션 추가)
     player.animTimer++;
     if (player.animTimer >= 15) { // 걷기 애니메이션 속도 조절
         player.animFrame = (player.animFrame + 1) % 3; // 0, 1, 2로 순환
@@ -1601,148 +1600,6 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // ========== 이벤트 리스너 설정 ==========
-// DOM이 완전히 로드된 후 실행
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 완전 로드됨');
-    setupEventListeners();
-});
-
-// 만약 이미 로드된 상태라면 즉시 실행
-if (document.readyState === 'loading') {
-    // 위의 DOMContentLoaded 이벤트가 처리함
-} else {
-    // DOM이 이미 로드된 상태
-    setupEventListeners();
-}
-
-function setupEventListeners() {
-    console.log('이벤트 리스너 설정 시작');
-    
-    // 이미 설정되었는지 확인
-    if (window.eventListenersSetup) {
-        console.log('이벤트 리스너가 이미 설정되어 있음');
-        return;
-    }
-    window.eventListenersSetup = true;
-    
-    // 모바일 키보드 전역 방지
-    document.addEventListener('touchstart', function(e) {
-        if (e.target.id === 'answerInput') {
-            e.preventDefault();
-            e.stopPropagation();
-            document.activeElement.blur();
-        }
-    }, { passive: false });
-    
-    // 구구단 버튼들
-    const danButtons = document.querySelectorAll('.dan-btn');
-    console.log('구구단 버튼 개수:', danButtons.length);
-    
-    danButtons.forEach(button => {
-        // 기존 이벤트 제거
-        button.replaceWith(button.cloneNode(true));
-    });
-    
-    // 다시 선택하고 이벤트 추가
-    document.querySelectorAll('.dan-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const dan = parseInt(this.getAttribute('data-dan'));
-            toggleDan(dan);
-        });
-    });
-
-    // 연산 버튼들
-    const operatorButtons = document.querySelectorAll('.operator-btn');
-    console.log('연산 버튼 개수:', operatorButtons.length);
-    
-    operatorButtons.forEach(button => {
-        // 기존 이벤트 제거
-        button.replaceWith(button.cloneNode(true));
-    });
-    
-    // 다시 선택하고 이벤트 추가
-    document.querySelectorAll('.operator-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const op = this.getAttribute('data-op');
-            toggleOperator(op);
-        });
-    });
-
-    // 기타 버튼들
-    const startBtn = document.getElementById('startGameBtn');
-    if (startBtn) {
-        const newStartBtn = startBtn.cloneNode(true);
-        startBtn.replaceWith(newStartBtn);
-        newStartBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!this.disabled) {
-                startSelectedGame();
-            }
-        });
-    }
-    
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-    }
-    
-    const jumpBtn = document.getElementById('jumpBtn');
-    if (jumpBtn) {
-        jumpBtn.addEventListener('click', jump);
-    }
-    
-    const menuBtn = document.getElementById('menuBtn');
-    if (menuBtn) {
-        menuBtn.addEventListener('click', showMenu);
-    }
-    
-    const helpBtn = document.getElementById('helpBtn');
-    if (helpBtn) {
-        helpBtn.addEventListener('click', showHelp);
-    }
-    
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', submitAnswer);
-    }
-
-    // 엔터키 이벤트
-    const answerInput = document.getElementById('answerInput');
-    if (answerInput) {
-        answerInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                submitAnswer();
-            }
-        });
-    }
-
-    // 커스텀 키보드 이벤트 - 중복 방지를 위해 기존 이벤트 제거
-    const keyButtons = document.querySelectorAll('.key-btn');
-    console.log('키보드 버튼 개수:', keyButtons.length);
-
-    keyButtons.forEach(button => {
-        // 기존 이벤트 리스너 제거를 위해 버튼 복제
-        const newButton = button.cloneNode(true);
-        button.replaceWith(newButton);
-        
-        // 새 이벤트 리스너 추가
-        newButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const key = this.getAttribute('data-key');
-            console.log('키 버튼 클릭:', key);
-            handleKeyPress(key);
-        });
-    });
-    
-    console.log('모든 이벤트 설정 완료');
-}
-
-// ========== 이벤트 리스너 설정 ==========
 // DOM이 완전히 로드된 후 한 번만 실행
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupEventListeners);
@@ -1857,6 +1714,7 @@ function setupEventListeners() {
             }
         });
     }
+    
     // 캐릭터 선택 버튼들 - 이벤트 위임 방식 사용
 	const characterGrid = document.getElementById('characterGrid');
 	if (characterGrid) {
@@ -1870,11 +1728,10 @@ function setupEventListeners() {
 	        }
 	    });
 	}
-
 	
     console.log('모든 이벤트 설정 완료');
     // 기본 캐릭터 선택 (지율이)
-    selectCharacter('Player');
+    selectCharacter('jiyul');
 }
 
 // 커스텀 키보드 처리 함수
