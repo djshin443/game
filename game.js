@@ -1486,23 +1486,23 @@ function updateSelectedCharacterDisplay() {
     
     if (selectedCharacterName) {
         const characterNames = {
-            'jiyul': '지율이',
+            'jiyul': '짜국이',
             'kiwi': '키위',
             'whitehouse': '화이트하우스'
         };
-        selectedCharacterName.textContent = characterNames[gameState.selectedCharacter] || '지율이';
+        selectedCharacterName.textContent = characterNames[gameState.selectedCharacter] || '짜국이';
     }
 }
 
 // 도움말 표시
 function showHelp() {
-    alert('🌸 지율이의 픽셀 수학 게임 도움말 🌸\n\n' +
+    alert('🌸 짜국이의 픽셀 수학 게임 도움말 🌸\n\n' +
           '1. 구구단이나 연산을 선택하고 시작하세요!\n' +
           '2. 점프 버튼으로 장애물을 뛰어넘으세요!\n' +
           '3. 장애물에 막히면 화면이 멈춰요!\n' +
           '4. 움직이는 몬스터를 만나면 수학 문제를 풀어요!\n' +
           '5. 정답을 맞추면 몬스터를 물리칠 수 있어요!\n\n' +
-          '💕 지율이 화이팅! 💕');
+          '💕 짜국이 화이팅! 💕');
 }
 
 
@@ -1751,7 +1751,7 @@ function setupEventListeners() {
 	
     console.log('모든 이벤트 설정 완료');
 	
-	// 기본 캐릭터 선택 (지율이)
+	// 기본 캐릭터 선택 (짜국이)
 	selectCharacter('jiyul');
 }
 
