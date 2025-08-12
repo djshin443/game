@@ -61,7 +61,7 @@ function showEnding() {
         case 'jiyul':
             endingText.innerHTML = `
                 <h2 style="margin-bottom: 15px;">🎊 축하해요! 🎊</h2>
-                <p>지율이가 모든 스테이지를 클리어했어요!</p>
+                <p>짜국이가 모든 스테이지를 클리어했어요!</p>
                 <p style="color: #8B008B; margin-top: 10px;">엄마 아빠가 자랑스러워하고 있어요! 💕</p>
             `;
             break;
@@ -175,7 +175,7 @@ function drawEndingBackground(ctx, canvas) {
     }
 }
 
-// 지율이 엔딩 - 엄마 아빠와 함께
+// 짜국이 엔딩 - 엄마 아빠와 함께
 function drawJiyulEnding(ctx, canvas, frame) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height - 120;
@@ -183,7 +183,7 @@ function drawJiyulEnding(ctx, canvas, frame) {
     // 배경 장식 - 축하 리본
     drawCelebrationRibbons(ctx, canvas, frame);
     
-    // 지율이 (중앙) - 기쁨 표현
+    // 짜국이 (중앙) - 기쁨 표현
     const jiyulData = pixelData.jiyul;
     const jiyulX = centerX - 24;
     const jiyulY = centerY;
@@ -192,7 +192,7 @@ function drawJiyulEnding(ctx, canvas, frame) {
     const jumpOffset = Math.abs(Math.sin(frame * 0.05)) * 20;
     drawPixelSprite(jiyulData.idle, jiyulData.colorMap, jiyulX, jiyulY - jumpOffset, 3);
     
-    // 기쁨 표현 - 지율이 위에 반짝이
+    // 기쁨 표현 - 짜국이 위에 반짝이
     if (frame % 20 < 10) {
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(jiyulX - 10, jiyulY - jumpOffset - 40, 6, 6);
@@ -239,7 +239,7 @@ function drawKiwiEnding(ctx, canvas, frame) {
     const eatOffset = Math.sin(frame * 0.15) * 5;
     drawPixelSprite(kiwiData.idle, kiwiData.colorMap, kiwiX, kiwiY + eatOffset, 3);
     
-    // 지율이 (왼쪽에서 지켜보기)
+    // 짜국이 (왼쪽에서 지켜보기)
     const jiyulData = pixelData.jiyul;
     drawPixelSprite(jiyulData.idle, jiyulData.colorMap, centerX - 120, centerY - 10, 2.5);
     
@@ -1137,4 +1137,5 @@ function createEndingParticles() {
             life: 100 + Math.random() * 50
         });
     }
+
 }
