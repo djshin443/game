@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>지율이의 픽셀 수학 게임</title>
+    <title>짜국이의 픽셀 수학 게임</title>
 	<link rel="apple-touch-icon" href="ico.png">
     <link rel="icon" type="image/png" href="ico.png">
     <style>
@@ -868,7 +868,7 @@
         <div id="characterSelectMenu">
             <div class="menu-container">
                 <div class="menu-header">
-                    <h1 id="menuTitle">🌸 지율이의 픽셀 수학 게임 🌸</h1>
+                    <h1 id="menuTitle">🌸 짜국이의 픽셀 수학 게임 🌸</h1>
                     <p id="menuSubtitle">공주님! 함께 모험할 캐릭터를 선택해주세요 💕</p>
                 </div>
 
@@ -879,7 +879,7 @@
                         <div id="characterGrid" class="character-grid">
                             <button class="character-btn selected" data-character="jiyul">
                                 <canvas class="character-pixel" width="48" height="48"></canvas>
-                                <span>지율이</span>
+                                <span>짜국이</span>
                             </button>
                             <button class="character-btn" data-character="kiwi">
                                 <canvas class="character-pixel" width="48" height="48"></canvas>
@@ -907,7 +907,7 @@
 						<h3 class="card-title">👑 선택된 캐릭터</h3>
 						<div id="selectedCharacterDisplay" class="character-display">
 							<canvas id="selectedCharacterPixel" width="64" height="64"></canvas>
-							<span id="selectedCharacterName">지율이</span>
+							<span id="selectedCharacterName">짜국이</span>
 							<div id="characterGreeting" class="character-greeting">
 							</div>
 						</div>
@@ -1126,9 +1126,9 @@
 
         // 캐릭터별 인사말 데이터
         const characterGreetings = {
-			jiyul: "안녕! 나는 지율이야! 🌸 오늘도 구구단 연습하러 왔어! 키위랑 화이트하우스도 함께할까? 💖",
-			kiwi: "키위키위~! 🥝 나는 지율이가 키우는 크레스티드게코 키위야! 구구단 외우면서 같이 신나게 놀자! 깜깜한 곳에서도 구구단 척척! ✨",
-			whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 지율이만의 비밀 아지트! 내 안에서 구구단 공부하고 재밌는 놀이도 해보자! 우리만의 특별한 공간이야! 🎪"
+			jiyul: "안녕! 나는 짜국이야! 🌸 오늘도 구구단 연습하러 왔어! 키위랑 화이트하우스도 함께할까? 💖",
+			kiwi: "키위키위~! 🥝 나는 짜국이가 키우는 크레스티드게코 키위야! 구구단 외우면서 같이 신나게 놀자! 깜깜한 곳에서도 구구단 척척! ✨",
+			whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 짜국이만의 비밀 아지트! 내 안에서 구구단 공부하고 재밌는 놀이도 해보자! 우리만의 특별한 공간이야! 🎪"
 		};
 
         // selectCharacter 함수
@@ -1143,7 +1143,7 @@
 			// 캐릭터 이름 업데이트
 			const nameElement = document.getElementById('selectedCharacterName');
 			if (nameElement) {
-				nameElement.textContent = characterName === 'jiyul' ? '지율이' : 
+				nameElement.textContent = characterName === 'jiyul' ? '짜국이' : 
 										characterName === 'kiwi' ? '키위' : '화이트하우스';
 				console.log('캐릭터 이름 업데이트됨:', nameElement.textContent);
 			}
