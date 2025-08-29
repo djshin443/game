@@ -1,179 +1,1222 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly English Pattern</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>짜국이의 픽셀 수학 게임</title>
+	<link rel="apple-touch-icon" href="ico.png">
+    <link rel="icon" type="image/png" href="ico.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
 
-<!-- html2canvas & jsPDF 라이브러리 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        body {
+            background: #000;
+            font-family: 'Jua', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            -webkit-user-select: none;
+            user-select: none;
+        }
 
-<!-- CSS 파일들 임포트 -->
-<link rel="stylesheet" href="variables.css">
-<link rel="stylesheet" href="reset.css">
-<link rel="stylesheet" href="layout.css">
-<link rel="stylesheet" href="control-panel.css">
-<link rel="stylesheet" href="buttons.css">
-<link rel="stylesheet" href="header.css">
-<link rel="stylesheet" href="patterns.css">
-<link rel="stylesheet" href="inputs.css">
-<link rel="stylesheet" href="date-system.css">
-<link rel="stylesheet" href="blank-boxes.css">
-<link rel="stylesheet" href="footer.css">
-<link rel="stylesheet" href="modals.css">
-<link rel="stylesheet" href="text-editor.css">
-<link rel="stylesheet" href="responsive.css">
+        #gameContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #5C94FC;
+            display: flex;
+            flex-direction: column;
+        }
 
+        #gameCanvas {
+            flex: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
 
+        /* 공주님을 위한 예쁜 UI */
+        #fullscreenBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+            border: 3px solid #FFF;
+            color: white;
+            padding: 10px 15px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1000;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 120px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+            background: linear-gradient(135deg, rgba(255,105,180,0.9), rgba(255,182,193,0.9));
+            border: 3px solid #FFF;
+            padding: 12px 20px;
+            display: none;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #questionPanel {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: linear-gradient(135deg, #FFF0F5, #FFE4E1);
+          padding: 20px;
+          border: 4px solid #FF69B4;
+          text-align: center;
+          font-size: 16px;
+          color: #D8008B;
+          display: none;
+          z-index: 50;
+          width: 400px;
+          max-width: 90vw;
+          font-family: 'Jua', sans-serif;
+          border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #questionText {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #FF1493;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .blank-box {
+            display: inline-block;
+            width: 45px;
+            height: 35px;
+            background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+            border: 3px solid #FF69B4;
+            border-radius: 12px;
+            text-align: center;
+            line-height: 29px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #8B008B;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            box-shadow: inset 0 2px 5px rgba(255,105,180,0.2), 0 2px 8px rgba(255,105,180,0.3);
+            margin: 0 5px;
+            position: relative;
+        }
+
+        .blank-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FF69B4, #FFB6C1, #FF1493, #FFD700);
+            border-radius: 15px;
+            z-index: -1;
+            opacity: 0.3;
+        }
+		
+        #enemyInfo {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #FF69B4;
+            background: rgba(255,255,255,0.5);
+            padding: 8px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        #answerInput {
+            padding: 12px 15px;
+            border: 3px solid #FF69B4;
+            font-size: 20px;
+            text-align: center;
+            margin: 10px 5px;
+            width: 120px;
+            background: #FFF;
+            color: #FF1493;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            cursor: default;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+            pointer-events: none;
+            display: inline-block;
+        }
+        
+        /* 커스텀 키보드 스타일 */
+        #customKeyboard {
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            gap: 30px;
+        }
+
+        .numpad-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 18px;
+            justify-items: center;
+            align-items: center;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .key-btn {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FFE4E1, #FFC0CB);
+            border: 2px solid #FF69B4;
+            color: #FF1493;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Jua', sans-serif;
+            border-radius: 18px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .key-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+            color: white;
+        }
+
+        .key-btn.key-clear {
+            background: linear-gradient(135deg, #87CEEB, #98D8E8);
+            border-color: #4682B4;
+            color: #1E90FF;
+            font-size: 36px;
+        }
+
+        .key-btn.key-back {
+            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+            border-color: #FF1493;
+            color: #8B008B;
+            font-size: 26px;
+        }
+
+        #submitBtn {
+            background: linear-gradient(135deg, #FF1493, #FF69B4);
+            color: white;
+            border: 3px solid #FFF;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-family: 'Jua', sans-serif;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 2%;
+            z-index: 10;
+            height: 15vh;
+            min-height: 60px;
+            max-height: 80px;
+            padding: 0 2%;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+            border: 3px solid #FFF;
+            color: #FF1493;
+            padding: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            flex: 1;
+            font-family: 'Jua', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+
+        #jumpBtn {
+            background: linear-gradient(135deg, #FF1493, #FF69B4);
+            color: white;
+            flex: 2;
+            font-size: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* 핑크 테마 메뉴 스타일 */
+        #characterSelectMenu, #mathSelectMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFE4E1 100%);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .menu-container {
+            background: rgba(255, 240, 245, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(255, 20, 147, 0.2);
+            border: 3px solid #FF69B4;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .menu-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        #menuTitle {
+            font-size: clamp(24px, 5vw, 36px);
+            color: #FF1493;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-family: 'Jua', sans-serif;
+            letter-spacing: -0.5px;
+            text-shadow: 2px 2px 0 #FFF, 3px 3px 10px rgba(255, 20, 147, 0.3);
+        }
+
+        #menuSubtitle {
+            font-size: clamp(14px, 3vw, 18px);
+            color: #8B008B;
+            font-weight: 400;
+            font-family: 'Jua', sans-serif;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .menu-content {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, #ffffff, #fff0f5);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.1);
+            border: 2px solid #FFB6C1;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FF1493;
+            margin-bottom: 16px;
+            font-family: 'Jua', sans-serif;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .character-grid {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .character-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border-radius: 16px;
+            border: 2px solid #FF69B4;
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        }
+
+        #selectedCharacterPixel {
+            border-radius: 12px;
+            background: rgba(255,255,255,0.5);
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #selectedCharacterName {
+            font-family: 'Jua', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #FF1493;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 12px;
+        }
+
+        #danGrid {
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        }
+
+        .operator-grid {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+
+        .character-btn {
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 3px solid #FF69B4;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF1493;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.2);
+        }
+
+        .character-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
+            border-color: #FF1493;
+        }
+
+        .character-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4); }
+            to { box-shadow: 0 12px 30px rgba(255, 20, 147, 0.6); }
+        }
+
+        .character-pixel {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .option-btn {
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 2px solid #FFB6C1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF1493;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
+        }
+
+        .option-btn:hover {
+            border-color: #FF69B4;
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        }
+
+        .option-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        }
+
+        .selection-summary {
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #FFB6C1;
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.1);
+        }
+
+        .selection-item {
+            font-family: 'Jua', sans-serif;
+            color: #8B008B;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .selection-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #32CD32, #90EE90);
+            border: 3px solid #FFF;
+            border-radius: 12px;
+            padding: 16px 32px;
+            color: white;
+            font-family: 'Jua', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-self: center;
+            min-width: 200px;
+            box-shadow: 0 6px 15px rgba(50, 205, 50, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(50, 205, 50, 0.4);
+        }
+
+        .start-btn:disabled {
+            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+            color: #8B008B;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #FFB6C1, #FF69B4);
+            border: 3px solid #FFF;
+            border-radius: 12px;
+            padding: 16px 32px;
+            color: white;
+            font-family: 'Jua', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 180px;
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
+        }
+
+        /* 구구단과 연산 버튼 스타일 */
+        .dan-btn {
+            background: linear-gradient(135deg, #ffffff, #ffe4e1);
+            border: 2px solid #FFB6C1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF1493;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 105, 180, 0.1);
+        }
+
+        .dan-btn:hover {
+            border-color: #FF69B4;
+            background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+        }
+
+        .dan-btn.selected {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border-color: #FF1493;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        }
+
+        .operator-btn {
+            background: linear-gradient(135deg, #ffffff, #f0e68c);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Jua', sans-serif;
+            font-weight: 500;
+            color: #FF8C00;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 140, 0, 0.1);
+        }
+
+        .operator-btn:hover {
+            border-color: #FF8C00;
+            background: linear-gradient(135deg, #fff8dc, #f0e68c);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
+        }
+
+        .operator-btn.selected {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #FF8C00;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+		
+		.character-greeting {
+			background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+			border: 2px solid #FF69B4;
+			border-radius: 15px;
+			padding: 12px 20px;
+			margin-top: 10px;
+			font-family: 'Jua', sans-serif;
+			color: #FF1493;
+			font-size: 16px;
+			text-align: center;
+			box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
+			max-width: 90%; /* 부모 요소의 90%까지 */
+			width: 100%;
+			min-width: 400px; /* 최소 너비 지정 */
+		}
+
+        /* 반응형 디자인 */
+        @media screen and (max-width: 768px) {
+            .menu-container {
+                padding: 24px;
+                margin: 10px;
+            }
+
+            .menu-content {
+                gap: 24px;
+            }
+
+            .menu-card {
+                padding: 20px;
+            }
+
+            .character-btn {
+                min-width: 100px;
+                padding: 12px;
+            }
+
+            .character-pixel {
+                width: 40px;
+                height: 40px;
+            }
+
+            #danGrid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .operator-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .button-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .back-btn, .start-btn {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        @media screen and (orientation: landscape) and (max-height: 600px) {
+            .menu-container {
+                max-height: 95vh;
+                padding: 20px;
+            }
+
+            .menu-header {
+                margin-bottom: 20px;
+            }
+
+            .menu-content {
+                gap: 20px;
+            }
+
+            .menu-card {
+                padding: 16px;
+            }
+
+            .button-group {
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+
+        /* 가로 모드 최적화 */
+        @media screen and (orientation: landscape) {
+            .menu-container {
+                display: flex;
+                flex-direction: column;
+                max-width: 1000px;
+                padding: 24px;
+            }
+
+            .menu-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                align-items: start;
+            }
+
+            /* 캐릭터 선택 화면 */
+            #characterSelectMenu .menu-card:first-child {
+                grid-column: 1 / -1;
+            }
+
+            #characterSelectMenu .start-btn {
+                grid-column: 1 / -1;
+                justify-self: center;
+            }
+
+            /* 수학 선택 화면 */
+            #mathSelectMenu .menu-card:first-child {
+                grid-column: 1 / -1;
+            }
+
+            #mathSelectMenu .selection-summary {
+                grid-column: 1 / -1;
+            }
+
+            #mathSelectMenu .button-group {
+                grid-column: 1 / -1;
+                justify-self: center;
+            }
+
+            .character-grid {
+                justify-content: center;
+            }
+
+            #danGrid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .operator-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (orientation: portrait) {
+            #gameContainer::before {
+                content: "🌸 화면을 가로로 돌려주세요! 🌸";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+                color: white;
+                padding: 5vh 10vw;
+                border: 3px solid #FFF;
+                border-radius: 20px;
+                font-size: min(5vw, 20px);
+                z-index: 9999;
+                font-family: 'Jua', sans-serif;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+                text-align: center;
+                line-height: 1.5;
+            }
+            
+            #gameCanvas, #controls, #ui, #questionPanel {
+                display: none !important;
+            }
+        }
+        
+        /* 모바일 최적화 */
+        @media screen and (orientation: landscape) and (max-height: 500px) {
+            #controls {
+                height: 12vh;
+                min-height: 50px;
+            }
+            
+            .control-btn {
+                font-size: min(3vh, 14px) !important;
+                padding: 1vh !important;
+            }
+            
+            #ui {
+                font-size: min(2.5vh, 12px) !important;
+                padding: 1vh 2vw !important;
+            }
+            
+            #questionPanel {
+                padding: 1.5vh 2vw !important;
+                width: 85vw;
+                max-height: 85vh;
+                border-width: 0.6vw;
+                border-radius: 3vw;
+            }
+            
+            #questionText {
+                font-size: 3.5vw !important;
+                margin-bottom: 1vh;
+            }
+
+            #customKeyboard .key-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                border-radius: 10px;
+            }
+
+            .control-buttons .key-btn {
+                width: 50px;
+                height: 45px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="wrapper">
-        <!-- 컨트롤 패널 -->
-        <div class="control-panel">
-            <div class="control-header">
-                <h2 class="control-title">Weekly Pattern Builder</h2>
-                <p class="control-subtitle">Create this week's English patterns for your students</p>
-            </div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
 
+        <button id="fullscreenBtn">FULL</button>
 
-        <div class="control-section">
-            <div class="control-section-title">Actions</div>
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="addPattern()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                    </svg>
-                    Add New Pattern
-                </button>
-                
-                <button class="btn btn-outline" onclick="toggleExamples()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" id="examples-icon">
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                    </svg>
-                    <span id="examples-btn-text">Show Examples</span>
-                </button>
-                
-                <button class="btn btn-outline" onclick="showSaveOptions()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                    </svg>
-                    Save File
-                </button>
-                
-                <button class="btn btn-danger" onclick="clearAll()">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
-                    </svg>
-                    Clear All
-                </button>
-            </div>
-        </div>
-        
-        <div class="control-section">
-            <div class="info-box">
-                <div class="info-box-title">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                    </svg>
-                    How to use
+        <!-- 1단계: 캐릭터 선택 화면 -->
+        <div id="characterSelectMenu">
+            <div class="menu-container">
+                <div class="menu-header">
+                    <h1 id="menuTitle">🌸 짜국이의 픽셀 수학 게임 🌸</h1>
+                    <p id="menuSubtitle">공주님! 함께 모험할 캐릭터를 선택해주세요 💕</p>
                 </div>
-                <ul style="margin-left: 20px; font-size: 0.813rem;">
-                    <li>Click on pattern to edit</li>
-                    <li>Type <span class="shortcut">[]</span> <span class="shortcut">[ ]</span> <span class="shortcut">[   ]</span> for different box sizes</li>
-                    <li>Hover over pattern card to see "Del" button</li>
-                    <li>Press <span class="shortcut">Enter</span> to save</li>
-                    <li>Press <span class="shortcut">ESC</span> to cancel</li>
-                    <li>Maximum 3 patterns per sheet</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 메인 포스터 -->
-    <div class="container" id="poster-container">
-        <div class="poster">
-            <div class="bg-pattern"></div>
-            
-            <!-- 헤더 -->
-            <div class="header">
-                <div class="header-top">
-                    <div class="logo">
-                        <svg width="220" height="35" viewBox="0 0 220 35" class="logo-svg">
-                            <defs>
-                                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
-                                </linearGradient>
-                            </defs>
-                            <text x="0" y="24" font-family="Poppins, sans-serif" font-size="20" font-weight="800" fill="url(#logoGradient)" letter-spacing="1">ZENITH ENGLISH</text>
-                            <rect x="0" y="28" width="110" height="3" fill="url(#logoGradient)" rx="1.5"/>
-                        </svg>
+
+                <div class="menu-content">
+                    <!-- 캐릭터 선택 카드 -->
+                    <div class="menu-card">
+                        <h3 class="card-title">✨ 캐릭터 선택</h3>
+                        <div id="characterGrid" class="character-grid">
+                            <button class="character-btn selected" data-character="jiyul">
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <span>짜국이</span>
+                            </button>
+                            <button class="character-btn" data-character="kiwi">
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <span>키위</span>
+                            </button>
+                            <button class="character-btn" data-character="whitehouse">
+                                <canvas class="character-pixel" width="48" height="48"></canvas>
+                                <span>화이트하우스</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="date-badge" id="date-badge"></div>
+
+                    <!-- 다음 버튼 -->
+                    <button id="nextToMathBtn" class="start-btn">🎯 다음: 학습 선택</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 2단계: 구구단과 연산 선택 화면 -->
+        <div id="mathSelectMenu" style="display: none;">
+            <div class="menu-container">
+                <div class="menu-content">
+                    <!-- 선택된 캐릭터 표시 -->
+                    <div class="menu-card">
+						<h3 class="card-title">👑 선택된 캐릭터</h3>
+						<div id="selectedCharacterDisplay" class="character-display">
+							<canvas id="selectedCharacterPixel" width="64" height="64"></canvas>
+							<span id="selectedCharacterName">짜국이</span>
+							<div id="characterGreeting" class="character-greeting">
+							</div>
+						</div>
+					</div>
+
+                    <!-- 구구단 선택 카드 -->
+                    <div class="menu-card">
+                        <h3 class="card-title">📚 구구단 선택</h3>
+                        <div id="danGrid" class="grid-container">
+                            <button class="option-btn dan-btn" data-dan="2">2단</button>
+                            <button class="option-btn dan-btn" data-dan="3">3단</button>
+                            <button class="option-btn dan-btn" data-dan="4">4단</button>
+                            <button class="option-btn dan-btn" data-dan="5">5단</button>
+                            <button class="option-btn dan-btn" data-dan="6">6단</button>
+                            <button class="option-btn dan-btn" data-dan="7">7단</button>
+                            <button class="option-btn dan-btn" data-dan="8">8단</button>
+                            <button class="option-btn dan-btn" data-dan="9">9단</button>
+                        </div>
+                    </div>
+
+                    <!-- 연산 선택 카드 -->
+                    <div class="menu-card">
+                        <h3 class="card-title">🔢 연산 선택</h3>
+                        <div id="operatorGrid" class="grid-container operator-grid">
+                            <button class="option-btn operator-btn" data-op="add">➕ 더하기</button>
+                            <button class="option-btn operator-btn" data-op="sub">➖ 빼기</button>
+                            <button class="option-btn operator-btn" data-op="mul">✖️ 곱하기</button>
+                            <button class="option-btn operator-btn" data-op="div">➗ 나누기</button>
+                        </div>
+                    </div>
+
+                    <!-- 선택된 내용 표시 -->
+                    <div class="selection-summary">
+                        <div id="selectedDans" class="selection-item">💕 선택한 구구단: 없음</div>
+                        <div id="selectedOps" class="selection-item">💕 선택한 연산: 없음</div>
+                    </div>
+
+                    <!-- 버튼들 -->
+                    <div class="button-group">
+                        <button id="backToCharacterBtn" class="back-btn">⬅️ 이전: 캐릭터 선택</button>
+                        <button id="startGameBtn" class="start-btn" disabled>🎮 게임 시작!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ui">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>📚 <span id="danText">-</span></div>
+                <div>🏰 스테이지 <span id="stageText">1</span></div>
+                <div>⭐ <span id="score">0</span>점</div>
+                <div>💖 체력: <span id="hp">100</span></div>
+            </div>
+        </div>
+
+        <div id="questionPanel">
+          <div id="questionText">✨ 2 × 3 = ?</div>
+          <div id="enemyInfo">보스 체력: 3/3</div>
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="answerInput" placeholder="답은?" readonly inputmode="none">
+            <button id="submitBtn">⚡ 공격!</button>
+          </div>
+          
+          <!-- 수정된 키패드 레이아웃 -->
+          <div id="customKeyboard">
+            <!-- 숫자 영역 -->
+            <div class="numpad-container">
+              <button class="key-btn" data-key="1">1</button>
+              <button class="key-btn" data-key="2">2</button>
+              <button class="key-btn" data-key="3">3</button>
+              <button class="key-btn" data-key="4">4</button>
+              <button class="key-btn" data-key="5">5</button>
+              <button class="key-btn" data-key="6">6</button>
+              <button class="key-btn" data-key="7">7</button>
+              <button class="key-btn" data-key="8">8</button>
+              <button class="key-btn" data-key="9">9</button>
+              <button class="key-btn" data-key="0">0</button>
+            </div>
+            
+            <!-- 지우기 버튼 영역 -->
+            <div class="control-buttons">
+              <button class="key-btn key-back" data-key="back">⬅️</button>
+              <button class="key-btn key-clear" data-key="clear">💖</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="controls">
+            <button class="control-btn" id="jumpBtn">🦄 점프!</button>
+            <button class="control-btn" id="menuBtn">🏠 메뉴</button>
+            <button class="control-btn" id="helpBtn">💡 도움</button>
+        </div>
+    </div>
+
+    <script>
+        // 캐릭터 픽셀 데이터
+        const characterPixelData = {
+            jiyul: {
+                idle: [
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+                    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+                    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,1,2,5,4,2,2,2,2,5,4,2,2,1,0,0],
+                    [0,1,2,5,5,2,2,2,2,5,5,2,2,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,0,2,2,2,6,6,6,6,2,2,2,2,0,0,0],
+                    [0,0,0,3,3,3,3,3,3,3,3,0,0,0,0,0],
+                    [0,0,3,3,3,3,3,3,3,3,3,3,0,0,0,0],
+                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
+                    [0,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0],
+                    [0,0,3,3,3,0,0,0,0,3,3,3,0,0,0,0],
+                    [0,0,2,2,2,0,0,0,0,2,2,2,0,0,0,0],
+                    [0,0,7,7,7,0,0,0,0,7,7,7,0,0,0,0]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#2C1810",
+                    2: "#FFE0BD",
+                    3: "#FF69B4",
+                    4: "#FFFFFF",
+                    5: "#4169E1",
+                    6: "#FF1493",
+                    7: "#8B4513"
+                }
+            },
+            kiwi: {
+                idle: [
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0],
+                    [0,0,0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+                    [0,1,1,1,1,1,2,2,2,4,2,2,1,0,0,0],
+                    [1,2,2,2,2,2,2,2,2,4,2,2,2,1,1,0],
+                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1],
+                    [0,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1],
+                    [0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
+                    [0,0,8,8,0,0,0,0,8,8,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#CC5500",
+                    2: "#FF8C00",
+                    4: "#000000",
+                    8: "#8B4513"
+                }
+            },
+            whitehouse: {
+                idle: [
+                    [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+                    [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+                    [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+                    [0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],
+                    [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
+                    [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+                    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
+                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
+                    [1,3,4,6,3,3,5,7,5,3,3,4,6,3,3,1],
+                    [1,3,4,4,3,3,5,5,5,3,3,4,4,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,5,3,3,3,3,3,3,3,1],
+                    [1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                colorMap: {
+                    0: null,
+                    1: "#808080",
+                    2: "#F5F5F5",
+                    3: "#FFFFFF",
+                    4: "#87CEEB",
+                    5: "#8B4513",
+                    6: "#4169E1",
+                    7: "#FFD700"
+                }
+            }
+        };
+
+        // 픽셀 스프라이트 그리기 함수
+        function drawCharacterPixelSprite(ctx, sprite, colorMap, scale = 3) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.imageSmoothingEnabled = false;
+            
+            for (let row = 0; row < sprite.length; row++) {
+                for (let col = 0; col < sprite[row].length; col++) {
+                    const pixel = sprite[row][col];
+                    if (pixel !== 0 && colorMap[pixel]) {
+                        ctx.fillStyle = colorMap[pixel];
+                        ctx.fillRect(col * scale, row * scale, scale, scale);
+                    }
+                }
+            }
+        }
+
+        // 캐릭터 픽셀 아트 그리기
+        function drawCharacterPixels() {
+            const characterButtons = document.querySelectorAll('.character-btn');
+            characterButtons.forEach(button => {
+                const canvas = button.querySelector('.character-pixel');
+                const character = button.getAttribute('data-character');
                 
-                <h1 class="main-title" id="main-title">This Week's English<br>Pattern Practice</h1>
-                <p class="subtitle">Practice these patterns to speak better English!</p>
-            </div>
-            
-            <!-- 패턴 그리드 -->
-            <div class="patterns-grid" id="patterns-grid">
-                <!-- 패턴들이 여기에 동적으로 생성됩니다 -->
-            </div>
-            
-            <!-- 푸터 -->
-            <div class="footer">
-                <div class="footer-text">
-                    <span class="footer-logo">ZENITH ENGLISH</span>
-                    • Discover, Learn, Succeed
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                if (canvas && characterPixelData[character]) {
+                    const ctx = canvas.getContext('2d');
+                    drawCharacterPixelSprite(ctx, characterPixelData[character].idle, characterPixelData[character].colorMap, 3);
+                }
+            });
+        }
 
-<div id="calendar-container"></div>
+        // 캐릭터별 인사말 데이터
+        const characterGreetings = {
+			jiyul: "안녕! 나는 짜국이야! 🌸 오늘도 구구단 연습하러 왔어! 키위랑 화이트하우스도 함께할까? 💖",
+			kiwi: "키위키위~! 🥝 나는 짜국이가 키우는 크레스티드게코 키위야! 구구단 외우면서 같이 신나게 놀자! 깜깜한 곳에서도 구구단 척척! ✨",
+			whitehouse: "안녕! 나는 화이트하우스 텐트야! 🏕️ 짜국이만의 비밀 아지트! 내 안에서 구구단 공부하고 재밌는 놀이도 해보자! 우리만의 특별한 공간이야! 🎪"
+		};
 
-<!-- 저장 옵션 선택 모달 -->
-<div class="save-modal-overlay" id="save-modal-overlay">
-    <div class="save-modal">
-        <div class="save-modal-header">
-            <h3 class="save-modal-title">Choose File Format</h3>
-            <p class="save-modal-subtitle">Select how you'd like to save your pattern sheet</p>
-        </div>
-        
-        <div class="save-options">
-            <div class="save-option pdf" onclick="saveAs('pdf')">
-                <div class="save-option-icon">📄</div>
-                <div class="save-option-title">PDF</div>
-                <div class="save-option-desc">Perfect for printing and sharing. Maintains quality at any size.</div>
-            </div>
-            
-            <div class="save-option png" onclick="saveAs('png')">
-                <div class="save-option-icon">🖼️</div>
-                <div class="save-option-title">PNG</div>
-                <div class="save-option-desc">High-quality image format. Great for digital use and presentations.</div>
-            </div>
-        </div>
-        
-        <div class="save-modal-actions">
-            <button class="btn-modal-cancel" onclick="closeSaveModal()">Cancel</button>
-        </div>
-    </div>
-</div>
+        // selectCharacter 함수
+		function selectCharacter(characterName) {
+			console.log('selectCharacter 호출됨:', characterName);
+			
+			// gameState에 선택된 캐릭터 저장 (게임 로직에서 사용)
+			if (typeof gameState !== 'undefined') {
+				gameState.selectedCharacter = characterName;
+			}
+			
+			// 캐릭터 이름 업데이트
+			const nameElement = document.getElementById('selectedCharacterName');
+			if (nameElement) {
+				nameElement.textContent = characterName === 'jiyul' ? '짜국이' : 
+										characterName === 'kiwi' ? '키위' : '화이트하우스';
+				console.log('캐릭터 이름 업데이트됨:', nameElement.textContent);
+			}
+			
+			// 인사말 업데이트
+			const greetingElement = document.getElementById('characterGreeting');
+			console.log('인사말 요소:', greetingElement);
+			console.log('캐릭터 인사말 데이터:', characterGreetings[characterName]);
+			
+			if (greetingElement) {
+				if (characterGreetings[characterName]) {
+					greetingElement.textContent = characterGreetings[characterName];
+					console.log('인사말 업데이트됨:', greetingElement.textContent);
+				} else {
+					greetingElement.textContent = '안녕하세요! 함께 모험을 떠나볼까요? 💕';
+					console.log('기본 인사말 설정됨');
+				}
+			}
+			
+			// 캐릭터 픽셀 업데이트
+			const pixelCanvas = document.getElementById('selectedCharacterPixel');
+			if (pixelCanvas && characterPixelData[characterName]) {
+				const ctx = pixelCanvas.getContext('2d');
+				drawCharacterPixelSprite(ctx, characterPixelData[characterName].idle, characterPixelData[characterName].colorMap, 4);
+				console.log('캐릭터 픽셀 업데이트됨');
+			}
+		}
 
-<!-- PDF 저장 중 로딩 -->
-<div class="loading-overlay" id="loading-overlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Generating PDF...</div>
-</div>
+        // 🔥 이 부분을 추가하세요 🔥
+        function setupCharacterSelection() {
+            const characterButtons = document.querySelectorAll('.character-btn');
+            characterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 기존 선택 해제
+                    characterButtons.forEach(btn => btn.classList.remove('selected'));
+                    // 새로운 선택
+                    this.classList.add('selected');
+                    
+                    // 캐릭터 선택 함수 호출
+                    const characterName = this.getAttribute('data-character');
+                    selectCharacter(characterName);
+                });
+            });
+        }
 
-<script src="script.js"></script>
+        // DOM 로드 후 캐릭터 그리기
+		document.addEventListener('DOMContentLoaded', function() {
+			drawCharacterPixels();
+			setupCharacterSelection();
+			
+			// 다음 버튼 이벤트 추가
+			document.getElementById('nextToMathBtn').addEventListener('click', function() {
+				const selectedCharacterBtn = document.querySelector('.character-btn.selected');
+				const selectedCharacter = selectedCharacterBtn.getAttribute('data-character');
+				
+				document.getElementById('characterSelectMenu').style.display = 'none';
+				document.getElementById('mathSelectMenu').style.display = 'flex';
+				
+				// 화면이 바뀐 후에 약간의 지연을 두고 캐릭터 정보 업데이트
+				setTimeout(() => {
+					selectCharacter(selectedCharacter);
+				}, 100);
+			});
+		});
+    </script>
 
-</body>
+    <!-- 기존 게임 스크립트 파일들 로드 -->
+	<script src="characters.js"></script>
+	<script src="particles.js"></script>
+	<script src="background.js"></script>
+	<script src="mount-system.js"></script>  <!-- 탑승 시스템 -->
+	<script src="math.js"></script>
+	<script src="game.js"></script>           <!-- 이 파일 -->
+	<script src="ending.js"></script>
 </html>
