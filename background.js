@@ -1,7 +1,7 @@
-// 배경 그리기 시스템 - background.js
+// 배경 렌더링 시스템
 
-// 메인 배경 그리기 함수 (화려한 버전)
-function drawBackground() {
+// 메인 배경 그리기 함수
+function drawBackground(ctx, canvas, gameState) {
     // 시간에 따른 하늘 색상 변화 (낮/노을/밤 느낌)
     const timePhase = (gameState.distance / 1000) % 3;
     let skyColors;
@@ -26,37 +26,37 @@ function drawBackground() {
     
     // 별과 달 (밤 시간대)
     if (timePhase >= 2) {
-        drawStars();
-        drawMoon();
+        drawStars(ctx, canvas, gameState);
+        drawMoon(ctx, canvas);
     } else {
         // 태양과 구름 (낮/노을 시간대)
-        drawSun(timePhase);
-        drawClouds();
+        drawSun(ctx, canvas, gameState, timePhase);
+        drawClouds(ctx, canvas, gameState);
     }
     
     // 무지개 (가끔 등장)
     if (Math.sin(gameState.distance / 500) > 0.7) {
-        drawRainbow();
+        drawRainbow(ctx, canvas);
     }
     
     // 원거리 산들 (다층 패럴랙스)
-    drawMountainLayers();
+    drawMountainLayers(ctx, canvas, gameState);
     
     // 나무들과 식물들
-    drawVegetation();
+    drawVegetation(ctx, canvas, gameState);
     
     // 꽃밭과 나비들
-    drawFlowerField();
+    drawFlowerField(ctx, canvas, gameState);
     
-    // 날아다니는 요소들
-    drawFlyingElements();
+    // 새들과 구름 그림자
+    drawFlyingElements(ctx, canvas, gameState);
     
     // 마법같은 파티클들
-    drawMagicalParticles();
+    drawMagicalParticles(ctx, canvas, gameState);
 }
 
 // 별들 그리기
-function drawStars() {
+function drawStars(ctx, canvas, gameState) {
     ctx.fillStyle = '#FFFF99';
     for (let i = 0; i < 50; i++) {
         const x = (i * 137 + gameState.distance * 0.1) % canvas.width;
@@ -75,7 +75,7 @@ function drawStars() {
 }
 
 // 달 그리기
-function drawMoon() {
+function drawMoon(ctx, canvas) {
     const moonX = canvas.width - 120;
     const moonY = 60;
     
@@ -102,7 +102,7 @@ function drawMoon() {
 }
 
 // 태양 그리기 (시간대별)
-function drawSun(timePhase) {
+function drawSun(ctx, canvas, gameState, timePhase) {
     const sunX = canvas.width - 150;
     const sunY = 80 + Math.sin(timePhase) * 30;
     let sunColor = '#FFD700';
@@ -139,7 +139,7 @@ function drawSun(timePhase) {
 }
 
 // 구름들 그리기
-function drawClouds() {
+function drawClouds(ctx, canvas, gameState) {
     const cloudOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 400);
     
     // 다양한 크기와 모양의 구름들
@@ -152,12 +152,12 @@ function drawClouds() {
     ];
     
     clouds.forEach(cloud => {
-        drawDetailedCloud(cloud.x - cloudOffset, cloud.y, cloud.size, cloud.opacity);
+        drawDetailedCloud(ctx, canvas, cloud.x - cloudOffset, cloud.y, cloud.size, cloud.opacity);
     });
 }
 
 // 상세한 구름 그리기
-function drawDetailedCloud(x, y, size, opacity) {
+function drawDetailedCloud(ctx, canvas, x, y, size, opacity) {
     if (x < -200 || x > canvas.width + 200) return;
     
     ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
@@ -187,7 +187,7 @@ function drawDetailedCloud(x, y, size, opacity) {
 }
 
 // 무지개 그리기
-function drawRainbow() {
+function drawRainbow(ctx, canvas) {
     const centerX = canvas.width * 0.7;
     const centerY = canvas.height;
     const rainbowColors = [
@@ -207,13 +207,14 @@ function drawRainbow() {
 }
 
 // 산맥 레이어들 그리기
-function drawMountainLayers() {
-    // 가장 먼 산맥들 (보라색 계열)
+function drawMountainLayers(ctx, canvas, gameState) {
+    // 가장 먼 산맥들 (보라색 계열) - 오른쪽에서 왼쪽으로 움직임
     const farOffset = (gameState.backgroundOffset * 0.1) % (canvas.width + 600);
     ctx.fillStyle = '#9370DB';
+    // 여러 개의 산을 반복해서 그리기
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 600) - farOffset;
-        drawMountainRange(xPos, GROUND_Y - 180, 8, 150);
+        drawMountainRange(ctx, canvas, xPos, GROUND_Y - 180, 8, 150);
     }
     
     // 중간 산맥들 (파란색 계열)
@@ -221,7 +222,7 @@ function drawMountainLayers() {
     ctx.fillStyle = '#4682B4';
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 500) - midOffset;
-        drawMountainRange(xPos, GROUND_Y - 130, 6, 120);
+        drawMountainRange(ctx, canvas, xPos, GROUND_Y - 130, 6, 120);
     }
     
     // 가까운 산맥들 (초록색 계열)
@@ -229,12 +230,12 @@ function drawMountainLayers() {
     ctx.fillStyle = '#228B22';
     for (let i = 0; i < 3; i++) {
         const xPos = i * (canvas.width + 400) - nearOffset;
-        drawMountainRange(xPos, GROUND_Y - 80, 5, 100);
+        drawMountainRange(ctx, canvas, xPos, GROUND_Y - 80, 5, 100);
     }
 }
 
 // 산맥 그리기
-function drawMountainRange(startX, baseY, count, maxHeight) {
+function drawMountainRange(ctx, canvas, startX, baseY, count, maxHeight) {
     ctx.beginPath();
     ctx.moveTo(startX, baseY);
     
@@ -247,27 +248,42 @@ function drawMountainRange(startX, baseY, count, maxHeight) {
     ctx.lineTo(startX + canvas.width + 200, baseY);
     ctx.closePath();
     ctx.fill();
+    
+    // 산에 눈 덮인 봉우리
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    for (let i = 0; i <= count; i++) {
+        const x = startX + (i * (canvas.width + 200)) / count;
+        const height = maxHeight * (0.5 + Math.sin(i * 0.7) * 0.5);
+        if (height > maxHeight * 0.7) {
+            ctx.beginPath();
+            ctx.arc(x, baseY - height, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
 }
 
 // 식물들 그리기
-function drawVegetation() {
+function drawVegetation(ctx, canvas, gameState) {
     const treeOffset = (gameState.backgroundOffset * 0.5) % (canvas.width + 400);
     
+    // 다양한 나무들
     const trees = [
         {x: 120, type: 'pine', size: 1.0},
         {x: 280, type: 'oak', size: 1.2},
         {x: 450, type: 'pine', size: 0.8},
         {x: 620, type: 'birch', size: 1.1},
-        {x: 800, type: 'oak', size: 1.3}
+        {x: 800, type: 'oak', size: 1.3},
+        {x: 950, type: 'pine', size: 0.9},
+        {x: 1150, type: 'birch', size: 1.0}
     ];
     
     trees.forEach(tree => {
-        drawTree(tree.x - treeOffset, GROUND_Y, tree.type, tree.size);
+        drawDetailedTree(ctx, canvas, tree.x - treeOffset, GROUND_Y, tree.type, tree.size);
     });
 }
 
-// 나무 그리기
-function drawTree(x, y, type, size) {
+// 상세한 나무 그리기
+function drawDetailedTree(ctx, canvas, x, y, type, size) {
     if (x < -100 || x > canvas.width + 100) return;
     
     const trunkHeight = 60 * size;
@@ -277,30 +293,77 @@ function drawTree(x, y, type, size) {
     ctx.fillStyle = '#8B4513';
     ctx.fillRect(x - trunkWidth/2, y - trunkHeight, trunkWidth, trunkHeight);
     
-    // 나무 잎사귀
-    ctx.fillStyle = '#228B22';
-    if (type === 'pine') {
-        // 소나무 모양
-        for (let i = 0; i < 3; i++) {
-            const leafY = y - trunkHeight + i * 15 * size;
-            const leafSize = (35 - i * 5) * size;
-            ctx.beginPath();
-            ctx.moveTo(x, leafY - leafSize);
-            ctx.lineTo(x - leafSize/2, leafY);
-            ctx.lineTo(x + leafSize/2, leafY);
-            ctx.closePath();
-            ctx.fill();
-        }
-    } else {
-        // 둥근 나무
+    // 나무 기둥 텍스처
+    ctx.strokeStyle = '#654321';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.arc(x, y - trunkHeight, 35 * size, 0, Math.PI * 2);
+        ctx.moveTo(x - trunkWidth/2 + 2, y - trunkHeight + i * 20);
+        ctx.lineTo(x + trunkWidth/2 - 2, y - trunkHeight + i * 20);
+        ctx.stroke();
+    }
+    
+    // 나무 종류별 잎사귀
+    switch(type) {
+        case 'pine':
+            drawPineLeaves(ctx, x, y - trunkHeight, size);
+            break;
+        case 'oak':
+            drawOakLeaves(ctx, x, y - trunkHeight + 10, size);
+            break;
+        case 'birch':
+            drawBirchLeaves(ctx, x, y - trunkHeight + 5, size);
+            break;
+    }
+}
+
+// 소나무 잎 그리기
+function drawPineLeaves(ctx, x, y, size) {
+    ctx.fillStyle = '#228B22';
+    // 삼각형 모양들
+    for (let i = 0; i < 3; i++) {
+        const leafY = y + i * 15 * size;
+        const leafSize = (35 - i * 5) * size;
+        ctx.beginPath();
+        ctx.moveTo(x, leafY - leafSize);
+        ctx.lineTo(x - leafSize/2, leafY);
+        ctx.lineTo(x + leafSize/2, leafY);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+// 참나무 잎 그리기
+function drawOakLeaves(ctx, x, y, size) {
+    ctx.fillStyle = '#32CD32';
+    ctx.beginPath();
+    ctx.arc(x, y, 35 * size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#228B22';
+    ctx.beginPath();
+    ctx.arc(x - 20 * size, y - 10 * size, 20 * size, 0, Math.PI * 2);
+    ctx.arc(x + 20 * size, y - 10 * size, 20 * size, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 자작나무 잎 그리기
+function drawBirchLeaves(ctx, x, y, size) {
+    ctx.fillStyle = '#90EE90';
+    // 타원형 잎들
+    for (let i = 0; i < 5; i++) {
+        const angle = (i * Math.PI * 2) / 5;
+        const leafX = x + Math.cos(angle) * 25 * size;
+        const leafY = y + Math.sin(angle) * 15 * size;
+        
+        ctx.beginPath();
+        ctx.ellipse(leafX, leafY, 12 * size, 8 * size, angle, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
 // 꽃밭 그리기
-function drawFlowerField() {
+function drawFlowerField(ctx, canvas, gameState) {
     const flowerOffset = (gameState.backgroundOffset * 0.7) % (canvas.width + 300);
     
     // 잔디
@@ -308,73 +371,299 @@ function drawFlowerField() {
     for (let i = 0; i < 50; i++) {
         const x = (i * 30 - flowerOffset) % (canvas.width + 100);
         if (x > -50 && x < canvas.width + 50) {
-            ctx.strokeStyle = '#228B22';
-            ctx.lineWidth = 2;
-            for (let j = 0; j < 3; j++) {
-                ctx.beginPath();
-                ctx.moveTo(x + j * 3, GROUND_Y + 5);
-                ctx.lineTo(x + j * 3 + Math.random() * 4 - 2, GROUND_Y - 3 - Math.random() * 5);
-                ctx.stroke();
-            }
+            drawGrass(ctx, x, GROUND_Y + 5);
         }
     }
     
     // 꽃들
     const flowers = [
-        {x: 80, color: '#FF69B4'},
-        {x: 180, color: '#FFB6C1'},
-        {x: 280, color: '#FF1493'},
-        {x: 380, color: '#FFC0CB'},
-        {x: 480, color: '#FFD700'}
+        {x: 80, color: '#FF69B4', type: 'rose'},
+        {x: 180, color: '#FFB6C1', type: 'daisy'},
+        {x: 280, color: '#FF1493', type: 'tulip'},
+        {x: 380, color: '#FFC0CB', type: 'rose'},
+        {x: 480, color: '#FFD700', type: 'sunflower'},
+        {x: 580, color: '#FF69B4', type: 'daisy'},
+        {x: 680, color: '#9370DB', type: 'lavender'}
     ];
     
     flowers.forEach(flower => {
-        const x = flower.x - flowerOffset;
+        drawDetailedFlower(ctx, canvas, flower.x - flowerOffset, GROUND_Y + 10, flower.color, flower.type);
+    });
+    
+    // 나비들
+    drawButterflies(ctx, canvas, gameState, flowerOffset);
+}
+
+// 잔디 그리기
+function drawGrass(ctx, x, y) {
+    ctx.strokeStyle = '#228B22';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * 3, y);
+        ctx.lineTo(x + i * 3 + Math.random() * 4 - 2, y - 8 - Math.random() * 5);
+        ctx.stroke();
+    }
+}
+
+// 상세한 꽃 그리기
+function drawDetailedFlower(ctx, canvas, x, y, color, type) {
+    if (x < -50 || x > canvas.width + 50) return;
+    
+    // 꽃 줄기
+    ctx.strokeStyle = '#228B22';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - 25);
+    ctx.stroke();
+    
+    // 잎사귀
+    ctx.fillStyle = '#32CD32';
+    ctx.beginPath();
+    ctx.ellipse(x - 8, y - 15, 5, 10, -0.5, 0, Math.PI * 2);
+    ctx.ellipse(x + 8, y - 12, 5, 10, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 꽃 종류별 그리기
+    switch(type) {
+        case 'rose':
+            drawRose(ctx, x, y - 25, color);
+            break;
+        case 'daisy':
+            drawDaisy(ctx, x, y - 25, color);
+            break;
+        case 'tulip':
+            drawTulip(ctx, x, y - 25, color);
+            break;
+        case 'sunflower':
+            drawSunflower(ctx, x, y - 25);
+            break;
+        case 'lavender':
+            drawLavender(ctx, x, y - 25, color);
+            break;
+    }
+}
+
+// 장미 그리기
+function drawRose(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI * 2) / 6;
+        const petalX = x + Math.cos(angle) * 6;
+        const petalY = y + Math.sin(angle) * 6;
+        ctx.beginPath();
+        ctx.ellipse(petalX, petalY, 8, 4, angle, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // 중심
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 데이지 그리기
+function drawDaisy(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI * 2) / 8;
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(angle) * 8, y + Math.sin(angle) * 8, 4, 8, angle, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 튤립 그리기
+function drawTulip(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 8, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x - 2, y - 3, 3, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// 해바라기 그리기
+function drawSunflower(ctx, x, y) {
+    // 노란 꽃잎들
+    ctx.fillStyle = '#FFD700';
+    for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI * 2) / 12;
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(angle) * 12, y + Math.sin(angle) * 12, 5, 10, angle, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // 갈색 중심
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 씨앗 패턴
+    ctx.fillStyle = '#654321';
+    for (let i = 0; i < 16; i++) {
+        const angle = (i * Math.PI * 2) / 16;
+        const dotX = x + Math.cos(angle) * 5;
+        const dotY = y + Math.sin(angle) * 5;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 1, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// 라벤더 그리기
+function drawLavender(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(x + (i - 2) * 2, y - i * 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// 나비들 그리기
+function drawButterflies(ctx, canvas, gameState, offset) {
+    const butterflies = [
+        {x: 200, y: GROUND_Y - 40, color1: '#FF69B4', color2: '#FFB6C1'},
+        {x: 450, y: GROUND_Y - 60, color1: '#9370DB', color2: '#DDA0DD'},
+        {x: 700, y: GROUND_Y - 35, color1: '#FFD700', color2: '#FFFF99'}
+    ];
+    
+    butterflies.forEach(butterfly => {
+        const x = butterfly.x - offset * 0.8; // 방향 변경
         if (x > -50 && x < canvas.width + 50) {
-            // 꽃 줄기
-            ctx.strokeStyle = '#228B22';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(x, GROUND_Y + 10);
-            ctx.lineTo(x, GROUND_Y - 15);
-            ctx.stroke();
-            
-            // 꽃잎
-            ctx.fillStyle = flower.color;
-            ctx.beginPath();
-            ctx.arc(x, GROUND_Y - 15, 8, 0, Math.PI * 2);
-            ctx.fill();
+            drawButterfly(ctx, gameState, x, butterfly.y, butterfly.color1, butterfly.color2);
         }
     });
+}
+
+// 나비 그리기
+function drawButterfly(ctx, gameState, x, y, color1, color2) {
+    const wingOffset = Math.sin(gameState.distance * 0.1) * 2;
+    
+    // 몸통
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(x - 1, y - 8, 2, 16);
+    
+    // 날개들
+    ctx.fillStyle = color1;
+    ctx.beginPath();
+    ctx.ellipse(x - 5, y - 3 + wingOffset, 6, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 5, y - 3 + wingOffset, 6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = color2;
+    ctx.beginPath();
+    ctx.ellipse(x - 5, y + 5 - wingOffset, 4, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 5, y + 5 - wingOffset, 4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 더듬이
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y - 8);
+    ctx.lineTo(x - 4, y - 12);
+    ctx.moveTo(x + 2, y - 8);
+    ctx.lineTo(x + 4, y - 12);
+    ctx.stroke();
 }
 
 // 날아다니는 요소들
-function drawFlyingElements() {
-    // 새들
+function drawFlyingElements(ctx, canvas, gameState) {
+    // 새들 (개선된 버전)
     const birdOffset = (gameState.backgroundOffset * 0.6) % (canvas.width + 500);
     const birds = [
-        {x: 150, y: 80},
-        {x: 400, y: 120},
-        {x: 650, y: 60}
+        {x: 150, y: 80, type: 'seagull'},
+        {x: 400, y: 120, type: 'sparrow'},
+        {x: 650, y: 60, type: 'eagle'},
+        {x: 900, y: 100, type: 'sparrow'}
     ];
     
     birds.forEach(bird => {
-        const x = bird.x - birdOffset;
-        if (x > -50 && x < canvas.width + 50) {
-            const wingFlap = Math.sin(gameState.distance * 0.2) * 5;
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x - 15, bird.y + wingFlap);
-            ctx.lineTo(x, bird.y - 8);
-            ctx.lineTo(x + 15, bird.y + wingFlap);
-            ctx.stroke();
-        }
+        drawDetailedBird(ctx, canvas, gameState, bird.x - birdOffset, bird.y, bird.type); // 방향 변경
     });
+    
+    // 민들레 씨앗들
+    drawDandelionSeeds(ctx, canvas, gameState);
+}
+
+// 상세한 새 그리기
+function drawDetailedBird(ctx, canvas, gameState, x, y, type) {
+    if (x < -50 || x > canvas.width + 50) return;
+    
+    const wingFlap = Math.sin(gameState.distance * 0.2) * 5;
+    
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    
+    switch(type) {
+        case 'seagull':
+            // 갈매기 - 큰 날개
+            ctx.beginPath();
+            ctx.moveTo(x - 15, y + wingFlap);
+            ctx.lineTo(x, y - 8);
+            ctx.lineTo(x + 15, y + wingFlap);
+            ctx.stroke();
+            break;
+        case 'sparrow':
+            // 참새 - 작은 날개
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + wingFlap);
+            ctx.lineTo(x, y - 4);
+            ctx.lineTo(x + 8, y + wingFlap);
+            ctx.stroke();
+            break;
+        case 'eagle':
+            // 독수리 - 큰 날개, 더 긴 날개폭
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y + wingFlap);
+            ctx.lineTo(x, y - 10);
+            ctx.lineTo(x + 20, y + wingFlap);
+            ctx.stroke();
+            break;
+    }
+}
+
+// 민들레 씨앗들
+function drawDandelionSeeds(ctx, canvas, gameState) {
+    for (let i = 0; i < 15; i++) {
+        const x = (i * 150 + gameState.distance * 0.3) % (canvas.width + 100);
+        const y = 50 + Math.sin(gameState.distance * 0.05 + i) * 30;
+        
+        if (x > -20 && x < canvas.width + 20) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 씨앗 털
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 1;
+            for (let j = 0; j < 6; j++) {
+                const angle = (j * Math.PI * 2) / 6;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + Math.cos(angle) * 6, y + Math.sin(angle) * 6);
+                ctx.stroke();
+            }
+        }
+    }
 }
 
 // 마법같은 파티클들
-function drawMagicalParticles() {
+function drawMagicalParticles(ctx, canvas, gameState) {
     for (let i = 0; i < 25; i++) {
         const x = (i * 200 + gameState.distance * 0.4) % (canvas.width + 150);
         const y = GROUND_Y - 100 + Math.sin(gameState.distance * 0.03 + i) * 50;
@@ -396,27 +685,6 @@ function drawMagicalParticles() {
                 ctx.arc(x, y, 1, 0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-    }
-}
-
-// 간단한 구름 그리기 (백업용)
-function drawSimpleClouds() {
-    const cloudOffset = (gameState.backgroundOffset * 0.3) % (canvas.width + 200);
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    for (let i = 0; i < 5; i++) {
-        const x = (i * 200) - cloudOffset;
-        const y = 50 + Math.sin(i) * 20;
-        
-        if (x > -100 && x < canvas.width + 100) {
-            // 구름 모양
-            ctx.beginPath();
-            ctx.arc(x, y, 25, 0, Math.PI * 2);
-            ctx.arc(x + 25, y, 35, 0, Math.PI * 2);
-            ctx.arc(x + 50, y, 25, 0, Math.PI * 2);
-            ctx.arc(x + 25, y - 15, 20, 0, Math.PI * 2);
-            ctx.fill();
         }
     }
 }

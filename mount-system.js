@@ -25,7 +25,7 @@ function initMountSystem() {
     mountState.canMount = false;
     mounts = [];
     
-    // 짜국이를 선택했을 때만 탑승 옵션 표시
+    // 지율이를 선택했을 때만 탑승 옵션 표시
     if (gameState.selectedCharacter === 'jiyul' && gameState.mountEnabled) {
         generateMounts();
     }
@@ -310,7 +310,7 @@ function renderMountedPlayer(ctx) {
     const mountY = player.y - player.height + mountState.mountBobOffset;
     drawPixelSprite(mountSprite, mountData.colorMap, player.x, mountY);
     
-    // 짜국이를 탑승물 위에 그리기 (앉은 자세)
+    // 지율이를 탑승물 위에 그리기 (앉은 자세)
     const riderY = mountY - player.height * 0.7; // 탑승물 위에 앉은 높이
     const riderSprite = playerData.idle; // 앉은 자세는 idle 사용
     
@@ -415,5 +415,4 @@ function updateMountButton() {
     } else {
         mountBtn.style.display = 'none';
     }
-
 }
