@@ -48,6 +48,12 @@ function showTitleScreen() {
                      (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
     const isMobilePortrait = isPortrait && isMobile;
 
+    // gameContainer에 menu-mode 클래스 추가 (타이틀 화면은 메뉴 모드)
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) {
+        gameContainer.classList.add('menu-mode');
+    }
+
     // 타이틀 화면 컨테이너 생성
     const titleScreen = document.createElement('div');
     titleScreen.id = 'titleScreen';
@@ -414,6 +420,12 @@ function showTitleScreen() {
         titleScreen.style.opacity = '0';
         
         setTimeout(() => {
+            // gameContainer의 menu-mode 클래스 제거 (게임 모드로 전환)
+            const gameContainer = document.getElementById('gameContainer');
+            if (gameContainer) {
+                gameContainer.classList.remove('menu-mode');
+            }
+
             // 타이틀 화면 이벤트 리스너 정리
             if (window._titleScreenCleanup) {
                 window._titleScreenCleanup();
@@ -991,8 +1003,8 @@ class OpeningSequence {
     
     // 렌더링
     render() {
-        // 세로모드일 때 가로모드 권장 메시지 표시 (모바일만)
-        if (!this.isLandscape && this.isMobile) {
+        // 세로모드일 때 무조건 가로모드 권장 메시지 표시
+        if (!this.isLandscape) {
             this.drawRotateMessage();
             return;
         }
